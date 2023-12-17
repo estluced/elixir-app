@@ -2,51 +2,63 @@ import 'swiper/css'
 import 'swiper/css/grid'
 import 'swiper/css/autoplay'
 import 'swiper/css/parallax'
-import { MemoryRouter as Router, Routes, Route } from 'react-router-dom'
-import { CssBaseline, ThemeProvider } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { Box, CssBaseline, ThemeProvider } from '@mui/material'
+import { useState } from 'react'
+import { Provider as ReduxProvider } from 'react-redux'
 import Header from './components/Header'
 import theme from './theme'
 import SelectFolderModal from './modals/SelectFolder'
 import { DownloadCenterProvider } from './providers/DownloadCenter'
 import DownloadCenterModal from './modals/DownloadCenter'
-import ProductsNavigation from './components/ProductsNavigation'
-import { ProductsProvider } from './providers/Products'
-import ProductScreen from './screens/Product'
+import { store as reduxRtkStore } from './store'
+import Pages from './pages'
+import { AppBackground, AppBackgroundContainer, AppContainer } from './styles'
+import Background from './assets/background.webp'
+import Image from './components/Image'
 
 export default function App() {
   const { store } = window.electron
   const [selectFolderModalOpen, setSelectFolderModalOpen] =
     useState<boolean>(false)
-
-  useEffect(() => {
-    const path = store.get('installation-path')
-    if (!path || path?.length < 1) setSelectFolderModalOpen(true)
-  }, [window])
+  const path = store.get('installation-path')
 
   const handleCloseSelectFolderModal = () => {
     setSelectFolderModalOpen(false)
   }
 
   return (
-    <ThemeProvider theme={theme}>
-      <DownloadCenterProvider>
-        <CssBaseline />
-        <Header />
-        <Router>
-          <ProductsProvider>
-            <Routes>
-              <Route path="/" element={<ProductScreen />} />
-            </Routes>
-            <ProductsNavigation />
-          </ProductsProvider>
-        </Router>
-        <DownloadCenterModal />
-        <SelectFolderModal
-          isOpen={selectFolderModalOpen}
-          handleClose={handleCloseSelectFolderModal}
-        />
-      </DownloadCenterProvider>
-    </ThemeProvider>
+    <ReduxProvider store={reduxRtkStore}>
+      <ThemeProvider theme={theme}>
+        <DownloadCenterProvider>
+          <AppContainer>
+            <AppBackgroundContainer>
+              <Image src={Background} disableApi />
+            </AppBackgroundContainer>
+            <CssBaseline />
+            <Header />
+            <Box id="pages-root">
+              <Pages />
+            </Box>
+            {path?.length && (
+              <>
+                <DownloadCenterModal />
+                <SelectFolderModal
+                  isOpen={selectFolderModalOpen}
+                  handleClose={handleCloseSelectFolderModal}
+                />
+              </>
+            )}
+          </AppContainer>
+        </DownloadCenterProvider>
+      </ThemeProvider>
+    </ReduxProvider>
   )
 }
+
+// <Routes>
+//   {path?.length ? (
+//     <Route path="/" element={<ProductScreen />} />
+//   ) : (
+//     <Route path="/" element={<SetupScreen />} />
+//   )}
+// </Routes>

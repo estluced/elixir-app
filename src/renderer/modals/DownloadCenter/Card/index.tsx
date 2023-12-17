@@ -31,7 +31,6 @@ function DownloadCard({
 
     ipcRenderer.on(`core/download/${id}/complete`, (downloadInfo) => {
       removeDownload(downloadInfo.id)
-      console.log(manifestPath)
       ipcRenderer.sendMessage('core/library/check-client-exists', manifestPath)
     })
 

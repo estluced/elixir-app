@@ -31,5 +31,3 @@ export interface ManifestArrayElement {
   type: 'client' | 'modify-client'
   manifestPath: string
 }
-
-export type Manifest = ManifestArrayElement[]

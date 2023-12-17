@@ -11,7 +11,6 @@ import {
   Manifest,
   ManifestArrayElement,
 } from '../../types/manifest'
-import getClientsManifest from '../api/getClientsManifest'
 import getClientManifest from '../api/getClientManifest'
 
 interface ProductsContextType {
@@ -56,19 +55,24 @@ export const ProductsProvider: React.FC<ProductsProviderProps> = ({
     setSelectedClient(client)
   }
 
-  const getActiveClient = (manifestUrl?: string) => {
-    if (manifestUrl) {
-      getClientManifest({ manifestUrl }).then(setActiveClient)
-    } else {
-      setActiveClient(null)
-    }
-  }
-
   useEffect(() => {
+    if (clients.length === 0) return
     const searchParams = new URLSearchParams(search)
     const manifestUrl = searchParams?.get('manifestUrl') || ''
-    getActiveClient(manifestUrl)
-  }, [search])
+    const manifestClient = [...clients, ...modifyClients].find(
+      (x) => x.manifest === manifestUrl,
+    )
+    ipcRenderer
+      .sendMessage('core/library/get-client-manifest', manifestClient)
+      .on((manifest: ClientManifest) => {
+        console.log(manifest)
+        if (manifest?.name) {
+          setActiveClient(manifest)
+        } else {
+          setActiveClient(null)
+        }
+      })
+  }, [search, clients])
 
   useEffect(() => {
     console.log('[DEBUG] Selected client', selectedClient)
@@ -77,12 +81,16 @@ export const ProductsProvider: React.FC<ProductsProviderProps> = ({
         'core/library/check-client-exists',
         selectedClient?.manifestPath,
       )
-    ipcRenderer.on('core/library/check-client-exists', console.log)
+    ipcRenderer.on(
+      'core/library/check-client-exists',
+      setSelectedClientInstalled,
+    )
   }, [selectedClient])
 
   useEffect(() => {
-    getClientsManifest()
-      .then((manifest) => {
+    ipcRenderer
+      .sendMessage('core/library/get-clients-manifest')
+      .on((manifest: ManifestArrayElement[]) => {
         const clients = manifest.filter((item) => item.type === 'client')
         setSelectedClient(clients[0])
         const modifyClients = manifest.filter(
@@ -92,7 +100,6 @@ export const ProductsProvider: React.FC<ProductsProviderProps> = ({
         console.log(selectedClient)
         setModifyClients(modifyClients)
       })
-      .catch(console.log)
   }, [ipcRenderer])
 
   return (

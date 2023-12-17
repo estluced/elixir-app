@@ -1,51 +1,27 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { SxProps } from '@mui/material'
 import { StyledImage } from './styles'
-
-interface ImageProps {
-  remoteUrl?: string
-  localUrl?: string
-  sx?: SxProps
-}
+import getConfig from '../../../utils/getConfig'
 
 const FallbackImage = ''
 
-const ImageComponent: React.FC<ImageProps> = ({ remoteUrl, localUrl, sx }) => {
-  const { store } = window.electron
-  const installationPath = store.get('installation-path')
-  const localPath = `file://${installationPath}/${localUrl}`
+const { API_URL_V2 } = getConfig()
 
-  const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(
-    localPath,
-  )
+interface ImageProps {
+  src: string
+  sx?: SxProps
+  fallback?: string
+  alt?: string
+  disableApi?: boolean
+}
 
-  useEffect(() => {
-    const checkImage = (
-      imageSrc: string,
-      good: () => void,
-      bad: () => void,
-    ) => {
-      const img = new Image()
-      img.onload = good
-      img.onerror = bad
-      img.src = imageSrc
-    }
-
-    checkImage(
-      localPath || '',
-      () => setCurrentImageUrl(localPath),
-      () => {
-        checkImage(
-          remoteUrl || '',
-          () => setCurrentImageUrl(remoteUrl),
-          () => setCurrentImageUrl(FallbackImage),
-        )
-      },
-    )
-  }, [localPath, remoteUrl])
-
+const ImageComponent = ({ src, sx, alt, disableApi }: ImageProps) => {
   return (
-    <StyledImage src={currentImageUrl || FallbackImage} alt="img" sx={sx} />
+    <StyledImage
+      src={`${disableApi ? '' : API_URL_V2}${src}`}
+      alt={alt}
+      sx={sx}
+    />
   )
 }
 

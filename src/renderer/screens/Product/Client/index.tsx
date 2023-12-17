@@ -34,13 +34,14 @@ function ClientView() {
     updateSelectedClient(JSON.parse(event.target.value))
   }
 
+  console.log(selectedClientInstalled)
+
   const handleClickStart = () => {
     if (selectedClientInstalled) {
       console.log('aaa')
     } else {
       getClientManifest({ manifestUrl: selectedClient!.manifest }).then(
         (manifest) => {
-          console.log('mnfst', manifest)
           pushDownload({
             url: manifest.artifacts,
             filename: manifest.name,

@@ -1,5 +1,6 @@
 import { Box, Paper, Typography } from '@mui/material'
 import Button from '@mui/material/Button'
+import { useEffect } from 'react'
 import { useProducts } from '../../../providers/Products'
 import Image from '../../../components/Image'
 import { ProductWrapper } from './styles'
@@ -8,6 +9,9 @@ import { Carousel } from '../../../components/Carousel'
 function ModifyClientView() {
   const { activeClient } = useProducts()
   const { store } = window.electron
+  useEffect(() => {
+    console.log('[DEBUG] Active client 234 P{', activeClient?.logo?.localUrl)
+  }, [activeClient])
   // const installationPath = store.get('installation-path');
   // const { pushDownload } = useDownloadCenter();
 

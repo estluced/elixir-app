@@ -4,10 +4,11 @@ import { Close, Remove, DownloadForOffline } from '@mui/icons-material'
 import { useDownloadCenter } from '../../providers/DownloadCenter'
 
 function Header() {
-  const { ipcRenderer } = window.electron
+  const { ipcRenderer, store } = window.electron
   const drag = { appRegion: 'drag' }
   const noDrag = { appRegion: 'no-drag' }
   const { handleOpenDownloadCenter, modalIsOpen } = useDownloadCenter()
+  const path = store.get('installation-path')
 
   const minimizeApp = () => {
     ipcRenderer.sendMessage('app', ['minimize'])
@@ -28,6 +29,7 @@ function Header() {
       sx={{
         position: 'fixed',
         width: '100%',
+        top: 0,
         zIndex: 9,
         ...drag,
       }}
@@ -37,15 +39,17 @@ function Header() {
     >
       <Box />
       <Box sx={noDrag}>
-        <Button
-          onClick={triggerDownloadCenter}
-          sx={{
-            color: 'text.primary',
-            minWidth: '50px',
-          }}
-        >
-          <DownloadForOffline sx={{ fontSize: '22px' }} />
-        </Button>
+        {path?.length && (
+          <Button
+            onClick={triggerDownloadCenter}
+            sx={{
+              color: 'text.primary',
+              minWidth: '50px',
+            }}
+          >
+            <DownloadForOffline sx={{ fontSize: '22px' }} />
+          </Button>
+        )}
         <Button
           sx={{
             color: 'text.primary',

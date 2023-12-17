@@ -28,6 +28,7 @@ module.exports = {
     ],
     'promise/catch-or-return': 'off',
     'compat/compat': 'off',
+    'react/jsx-props-no-spreading': 'off',
   },
   parserOptions: {
     ecmaFeatures: {
