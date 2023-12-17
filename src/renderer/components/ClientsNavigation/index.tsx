@@ -1,15 +1,26 @@
 import { useSelector } from 'react-redux'
+import { Box } from '@mui/material'
 import { RootState } from '../../store'
 import { ClientsNavigationContainer } from './styles'
 import ClientListCard from '../ClientListCard'
 
-const ClientsNavigation = () => {
+interface ClientNavigationProps {
+  handleSetActiveClient: (clientId: number) => void
+}
+
+const ClientsNavigation = ({
+  handleSetActiveClient,
+}: ClientNavigationProps) => {
   const clients = useSelector((state: RootState) => state.clients.clients)
-  console.log(clients)
   return (
     <ClientsNavigationContainer>
       {clients.map((client) => (
-        <ClientListCard {...client.id} {...client.attributes} />
+        <Box
+          key={`client-${client.id}`}
+          onClick={() => handleSetActiveClient(client.id)}
+        >
+          <ClientListCard {...client.attributes} />
+        </Box>
       ))}
     </ClientsNavigationContainer>
   )

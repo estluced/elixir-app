@@ -1,21 +1,22 @@
-import { Box } from '@mui/material'
+import { Box, Grid } from '@mui/material'
 import Button from '@mui/material/Button'
 import { Close, Remove, DownloadForOffline } from '@mui/icons-material'
 import { useDownloadCenter } from '../../providers/DownloadCenter'
+import AccountMenu from './AccountMenu'
+import usePreload from '../../hooks/usePreload'
 
 function Header() {
-  const { ipcRenderer, store } = window.electron
+  const { bridge, account, installPath } = usePreload()
   const drag = { appRegion: 'drag' }
   const noDrag = { appRegion: 'no-drag' }
   const { handleOpenDownloadCenter, modalIsOpen } = useDownloadCenter()
-  const path = store.get('installation-path')
 
   const minimizeApp = () => {
-    ipcRenderer.sendMessage('app', ['minimize'])
+    bridge.sendMessage('app', ['minimize'])
   }
 
   const quitApp = () => {
-    ipcRenderer.sendMessage('app', ['quit'])
+    bridge.sendMessage('app', ['quit'])
   }
 
   const triggerDownloadCenter = () => {
@@ -37,9 +38,9 @@ function Header() {
       justifyContent="space-between"
       height="42px"
     >
-      <Box />
-      <Box sx={noDrag}>
-        {path?.length && (
+      <Box width="100%" />
+      <Grid justifyContent="flex-end" container sx={noDrag} wrap="nowrap">
+        {installPath?.length && account && (
           <Button
             onClick={triggerDownloadCenter}
             sx={{
@@ -50,6 +51,7 @@ function Header() {
             <DownloadForOffline sx={{ fontSize: '22px' }} />
           </Button>
         )}
+        <AccountMenu />
         <Button
           sx={{
             color: 'text.primary',
@@ -66,7 +68,7 @@ function Header() {
         >
           <Close sx={{ fontSize: '16px' }} />
         </Button>
-      </Box>
+      </Grid>
     </Box>
   )
 }

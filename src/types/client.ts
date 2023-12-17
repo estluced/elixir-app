@@ -11,6 +11,7 @@ import { Keyword } from './keyword'
 export interface Client {
   title: string
   description: string
+  shortDescription: string
   createdAt: string
   updatedAt: string
   publishedAt: string
@@ -19,8 +20,9 @@ export interface Client {
   screenshots: StrapiDataMultiple<StrapiMedia>
   background: StrapiDataSingle<StrapiMedia>
   poster: StrapiDataSingle<StrapiMedia>
-  main_file: StrapiDataSingle<StrapiFile>
-  update_file: StrapiDataSingle<StrapiFile>
+  mainFile: StrapiDataSingle<StrapiFile>
+  updateFile: StrapiDataSingle<StrapiFile>
   version: StrapiDataSingle<StrapiAttributes<MinecraftClient>>
   keywords: StrapiDataMultiple<StrapiAttributes<Keyword>>
+  available: boolean
 }

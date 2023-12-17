@@ -13,9 +13,11 @@ export default function CssBaseLine(): Components['MuiCssBaseline'] {
       },
       body: {
         margin: 0,
+        overflowX: 'hidden',
       },
       '*': {
         userSelect: 'none',
+        fontFamily: "'Nunito', sans-serif !important",
       },
     },
   }

@@ -4,12 +4,15 @@ import {
   getDefaultInstallationPath,
   setInstallationPath,
   getDiskSpaceByPath,
+  storeImage,
 } from '../handlers/helpers'
 
 const HelpersEvents = (window: BrowserWindow) => {
   ipcMain.on('helpers/select-folder', (event) =>
     selectFolderHandler(event, window),
   )
+
+  ipcMain.on('helpers/cache-image', storeImage)
 
   ipcMain.on('helpers/get-default-installation-path', async (event) => {
     event.reply(

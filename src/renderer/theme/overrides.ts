@@ -6,6 +6,7 @@ import Button from './components/Button'
 import Avatar from './components/Avatar'
 import Paper from './components/Paper'
 import TextField from './components/TextField'
+import Chip from './components/Chip'
 
 const getOverrides = (theme: Theme): Components => ({
   MuiCssBaseline: CssBaseLine(),
@@ -14,6 +15,7 @@ const getOverrides = (theme: Theme): Components => ({
   MuiAvatar: Avatar(),
   MuiPaper: Paper(theme),
   MuiTextField: TextField(theme),
+  MuiChip: Chip(theme),
 })
 
 export default getOverrides

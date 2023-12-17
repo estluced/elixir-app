@@ -1,7 +1,8 @@
-import React from 'react'
+import { useEffect, useState } from 'react'
 import { SxProps } from '@mui/material'
 import { StyledImage } from './styles'
 import getConfig from '../../../utils/getConfig'
+// import usePreload from '../../hooks/usePreload'
 
 const FallbackImage = ''
 
@@ -16,13 +17,19 @@ interface ImageProps {
 }
 
 const ImageComponent = ({ src, sx, alt, disableApi }: ImageProps) => {
-  return (
-    <StyledImage
-      src={`${disableApi ? '' : API_URL_V2}${src}`}
-      alt={alt}
-      sx={sx}
-    />
-  )
+  const [source, setSource] = useState('')
+  // const { bridge } = usePreload()
+
+  useEffect(() => {
+    // if (src && !disableApi) {
+    // const source = `${API_URL_V2}${src}`
+    // bridge.sendMessage('helpers/cache-image', source).on(setSource)
+    // } else {
+    setSource(`${disableApi ? '' : API_URL_V2}${src}`)
+    // }
+  }, [])
+
+  return <StyledImage src={source} alt={alt} sx={sx} />
 }
 
 export default ImageComponent

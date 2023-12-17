@@ -29,7 +29,7 @@ export const rules: Required<ModuleOptions>['rules'] = [
     },
   },
   {
-    test: /\.(png|jpe?g|gif|svg|webp)$/,
+    test: /\.(png|jpe?g|gif|svg|webp|ttf)$/,
     use: [
       {
         loader: 'file-loader',

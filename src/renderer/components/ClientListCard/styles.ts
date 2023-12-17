@@ -35,16 +35,4 @@ export const ClientTitle = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   gap: '2px',
-  '.MuiChip-root': {
-    backgroundColor: 'transparent',
-    color: '#fff',
-    border: '1px solid #fff',
-    borderRadius: '16px',
-    padding: '4px 10px',
-    fontSize: '10px',
-    height: 'auto',
-    span: {
-      padding: 0,
-    },
-  },
 }))

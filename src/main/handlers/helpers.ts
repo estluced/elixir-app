@@ -1,6 +1,9 @@
 import { IpcMainEvent, dialog, BrowserWindow, ipcMain } from 'electron'
 import { homedir } from 'os'
 import checkDiskSpace from 'check-disk-space'
+import { request } from 'undici'
+import { createHash } from 'crypto'
+import fs from 'fs'
 import LauncherStore from '../utils/store'
 
 const DEFAULT_PATH = `${homedir()}\\Elixir`
@@ -64,10 +67,44 @@ const selectFolderHandler = async (
   }
 }
 
+const storeImage = async (event: IpcMainEvent, imageUrl: string) => {
+  try {
+    const store = LauncherStore.getInstance()
+    const installationPath = store.get('installation-path')
+    const outputDirectory = `${installationPath}/.cache`
+    if (!fs.existsSync(outputDirectory)) {
+      fs.mkdirSync(outputDirectory)
+    }
+
+    const { body } = await request(
+      imageUrl.replace('http://localhost', 'http://127.0.0.1'),
+    )
+    const imageData: Uint8Array[] = []
+
+    // eslint-disable-next-line no-restricted-syntax
+    for await (const chunk of body) {
+      imageData.push(chunk)
+    }
+
+    const buffer = Buffer.concat(imageData)
+    const hash = createHash('sha256').update(buffer).digest('hex')
+    const fileName = `${hash}.png`
+    const filePath = `${outputDirectory}/${fileName}`
+
+    fs.writeFileSync(filePath, buffer)
+
+    event.reply('helpers/cache-image', filePath)
+  } catch (error) {
+    console.log(error)
+    event.reply('helpers/cache-image', imageUrl)
+  }
+}
+
 export {
   selectFolderHandler,
   getInstallationPath,
   setInstallationPath,
   getDefaultInstallationPath,
   getDiskSpaceByPath,
+  storeImage,
 }

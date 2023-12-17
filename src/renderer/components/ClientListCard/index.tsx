@@ -17,8 +17,12 @@ const ClientListCard = ({ poster, title, version, keywords }: Client) => {
         <Typography>{title}</Typography>
         <Grid container gap="4px">
           <Chip variant="outlined" label={version.data.attributes.version} />
-          {keywords.data.map((keyword) => (
-            <Chip variant="outlined" label={keyword.attributes.title} />
+          {keywords.data.slice(0, 1).map((keyword) => (
+            <Chip
+              key={`keyword-${keyword.id}`}
+              variant="outlined"
+              label={keyword.attributes.title}
+            />
           ))}
         </Grid>
       </ClientTitle>

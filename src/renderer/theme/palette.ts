@@ -1,7 +1,7 @@
 export default {
   type: 'dark',
   primary: {
-    main: '#bf3b3b',
+    main: '#ffffff',
   },
   secondary: {
     main: '#198a51',
@@ -12,7 +12,7 @@ export default {
   },
   divider: '#333333',
   text: {
-    secondary: '#ffffff',
+    secondary: '#000000',
     primary: '#ffffff',
     disabled: '#d4d4d4',
     hint: '#ffffff',
