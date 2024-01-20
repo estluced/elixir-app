@@ -2,9 +2,10 @@ import { IpcMainEvent, dialog, BrowserWindow, ipcMain } from 'electron'
 import { homedir } from 'os'
 import checkDiskSpace from 'check-disk-space'
 import { request } from 'undici'
-import { createHash } from 'crypto'
 import fs from 'fs'
 import LauncherStore from '../utils/store'
+import { StrapiMedia } from '../../types/strapi'
+import getConfig from '../../utils/getConfig'
 
 const DEFAULT_PATH = `${homedir()}\\Elixir`
 
@@ -67,18 +68,26 @@ const selectFolderHandler = async (
   }
 }
 
-const storeImage = async (event: IpcMainEvent, imageUrl: string) => {
+const storeImage = async (event: IpcMainEvent, image: StrapiMedia) => {
+  const config = getConfig()
+  const imageUrl = `${config.API_URL_V2}${image.url}`
+
   try {
     const store = LauncherStore.getInstance()
     const installationPath = store.get('installation-path')
     const outputDirectory = `${installationPath}/.cache`
+    const fileName = `${image.hash}${image.ext}`
+    const filePath = `${outputDirectory}/${fileName}`
+
+    if (fs.existsSync(filePath)) {
+      return
+    }
+
     if (!fs.existsSync(outputDirectory)) {
       fs.mkdirSync(outputDirectory)
     }
 
-    const { body } = await request(
-      imageUrl.replace('http://localhost', 'http://127.0.0.1'),
-    )
+    const { body } = await request(imageUrl)
     const imageData: Uint8Array[] = []
 
     // eslint-disable-next-line no-restricted-syntax
@@ -87,16 +96,10 @@ const storeImage = async (event: IpcMainEvent, imageUrl: string) => {
     }
 
     const buffer = Buffer.concat(imageData)
-    const hash = createHash('sha256').update(buffer).digest('hex')
-    const fileName = `${hash}.png`
-    const filePath = `${outputDirectory}/${fileName}`
 
     fs.writeFileSync(filePath, buffer)
-
-    event.reply('helpers/cache-image', filePath)
   } catch (error) {
-    console.log(error)
-    event.reply('helpers/cache-image', imageUrl)
+    throw new Error(error)
   }
 }
 

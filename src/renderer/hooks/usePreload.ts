@@ -5,6 +5,7 @@ const usePreload = () => {
   const installPath = localStore.get('installation-path')
   const accountJwt = localStore.get('_jwt')
   const account: Account = JSON.parse(localStore.get('account'))
+  const cachePath = `${installPath}/.cache`
 
   return {
     localStore,
@@ -12,6 +13,7 @@ const usePreload = () => {
     bridge,
     accountJwt,
     account,
+    cachePath,
   }
 }
 

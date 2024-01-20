@@ -6,12 +6,13 @@ import {
   ClientTitle,
 } from './styles'
 import Image from '../Image'
+import StrapiMedia from '../StrapiMedia'
 
 const ClientListCard = ({ poster, title, version, keywords }: Client) => {
   return (
     <ClientListCardContainer>
       <ClientPosterContainer>
-        <Image src={poster.data.attributes.url} />
+        <StrapiMedia {...poster.data} />
       </ClientPosterContainer>
       <ClientTitle>
         <Typography>{title}</Typography>

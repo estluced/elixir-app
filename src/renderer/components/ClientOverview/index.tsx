@@ -1,10 +1,12 @@
-import { Box, Typography, Button, Paper, Chip, Grid } from '@mui/material'
+import { Box, Typography, Chip, Grid } from '@mui/material'
 import { PlayCircle } from '@mui/icons-material'
 import marked from 'marked'
+import { useDispatch } from 'react-redux'
 import { Client } from '../../../types/client'
 import { ClientOverviewContainer, PlayButton } from './styles'
 import { Carousel } from '../Carousel'
-import Image from '../Image'
+import StrapiMedia from '../StrapiMedia'
+import { addDownload } from '../../store/downloads/downloadsSlice'
 
 const ClientOverview = ({
   title,
@@ -13,8 +15,12 @@ const ClientOverview = ({
   screenshots,
   keywords,
   available,
+  mainFile,
 }: Client) => {
   const parsedDescription = marked.parse(description)
+  const dispatch = useDispatch()
+
+  const handleAddDownload = () => dispatch(addDownload(mainFile.data))
 
   return (
     <ClientOverviewContainer>
@@ -41,7 +47,7 @@ const ClientOverview = ({
       )}
       {available && (
         <Box mt="5px">
-          <PlayButton>
+          <PlayButton onClick={handleAddDownload}>
             <PlayCircle
               sx={{
                 marginRight: '5px',
@@ -77,8 +83,8 @@ const ClientOverview = ({
               overflow: 'hidden',
             }}
           >
-            <Image
-              src={screenshot.attributes.url}
+            <StrapiMedia
+              {...screenshot}
               sx={{
                 height: '100%',
                 width: '100%',

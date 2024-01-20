@@ -19,6 +19,7 @@ module.exports = {
     'react/require-default-props': 'off',
     'react/function-component-definition': 'off',
     'react/no-unstable-nested-components': 'off',
+    'class-methods-use-this': 'off',
     'prettier/prettier': [
       'warn',
       {

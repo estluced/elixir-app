@@ -16,8 +16,9 @@ export interface StrapiAttributes<T> {
   attributes: T
 }
 
-export type StrapiMedia = StrapiAttributes<{
+export type StrapiMedia = {
   url: string
+  ext: string
   width: number
   height: number
   size: number
@@ -31,14 +32,15 @@ export type StrapiMedia = StrapiAttributes<{
     medium?: StrapiMedia
     small?: StrapiMedia
   }
-}>
+}
 
-export type StrapiFile = StrapiAttributes<{
+export type StrapiFile = {
   url: string
   name: string
+  ext: string
   size: number
   mime: string
   createdAt: string
   updatedAt: string
   hash: string
-}>
+}

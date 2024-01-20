@@ -15,6 +15,7 @@ import Pages from './pages'
 import { AppBackground, AppBackgroundContainer, AppContainer } from './styles'
 import Background from './assets/background.webp'
 import Image from './components/Image'
+import DownloadsHOC from './store/downloads/hoc'
 
 export default function App() {
   const { store } = window.electron
@@ -28,6 +29,7 @@ export default function App() {
 
   return (
     <ReduxProvider store={reduxRtkStore}>
+      <DownloadsHOC />
       <ThemeProvider theme={theme}>
         <DownloadCenterProvider>
           <AppContainer>

@@ -1,7 +1,12 @@
-import { createWriteStream, promises } from 'fs'
+import { createWriteStream, promises, createReadStream } from 'fs'
 import { basename, dirname, join } from 'path'
 import { EventEmitter } from 'events'
 import { request } from 'undici'
+import unzipper from 'unzipper'
+import { StrapiFile } from '../../types/strapi'
+import getConfig from '../../utils/getConfig'
+
+const config = getConfig()
 
 export interface DownloadFile {
   path: string
@@ -24,7 +29,7 @@ export interface DownloadFileProgress {
 }
 
 export class Downloader extends EventEmitter {
-  private fileDownloads: DownloadFile[]
+  private fileDownloads: StrapiFile[]
 
   private readonly downloadProgress: DownloadProgress
 
@@ -34,14 +39,17 @@ export class Downloader extends EventEmitter {
 
   private readonly downloadId?: number | string
 
+  public readonly installPath?: string
+
   private speedTracker: {
     startTime: number
     startBytes: number
     speed: string
   } | null
 
-  constructor(props?: { downloadId?: number | string }) {
+  constructor(props?: { downloadId?: number | string; installPath: string }) {
     super()
+    this.installPath = props?.installPath
     this.downloadId = props?.downloadId
     this.fileDownloads = []
     this.downloadProgress = {
@@ -58,25 +66,22 @@ export class Downloader extends EventEmitter {
     this.isError = false
   }
 
-  public addDownloads(files: DownloadFile[]) {
+  public addDownloads(files: StrapiFile[]) {
     this.downloadProgress.totalFiles = files.length
     this.fileDownloads = [...this.fileDownloads, ...files]
   }
 
-  // eslint-disable-next-line class-methods-use-this
   private async createPath(location: string): Promise<string> {
     const dir = dirname(location)
     await promises.mkdir(dir, { recursive: true })
     return dir
   }
 
-  // eslint-disable-next-line class-methods-use-this
   private async createFile(dir: string, fileName: string): Promise<void> {
     const filePath = join(dir, fileName)
     await promises.writeFile(filePath, '')
   }
 
-  // eslint-disable-next-line class-methods-use-this
   private formatBytes(bytes: number): string {
     if (bytes < 1024) {
       return `${bytes.toFixed(0)} B`
@@ -97,8 +102,9 @@ export class Downloader extends EventEmitter {
     }
   }
 
-  private async downloadFile(downloadFile: DownloadFile): Promise<void> {
-    const { url, path: location, size } = downloadFile
+  private async downloadFile(downloadFile: StrapiFile): Promise<void> {
+    const { url, size, hash, ext } = downloadFile
+    const location = join(this.installPath, hash + ext)
     this.speedTracker = {
       startTime: Date.now(),
       startBytes: 0,
@@ -107,7 +113,7 @@ export class Downloader extends EventEmitter {
     let downloadedBytes = 0
 
     try {
-      const { body, headers } = await request(url, {
+      const { body, headers } = await request(config.API_URL_V2 + url, {
         method: 'GET',
       })
 
@@ -118,10 +124,7 @@ export class Downloader extends EventEmitter {
         writer.write(chunk)
         downloadedBytes += chunk.length
         this.updateSpeed(downloadedBytes)
-        const progress = Math.min(
-          Math.round((downloadedBytes / Number(contentLength)) * 100),
-          100,
-        )
+        const progress = (downloadedBytes / Number(contentLength)) * 100
         const downloadFileProgressData: DownloadFileProgress = {
           progress,
           size: Number(contentLength),
@@ -137,7 +140,7 @@ export class Downloader extends EventEmitter {
         writer.end()
       })
 
-      writer.on('finish', () => {
+      const nextStep = () => {
         this.updateTotalProgress()
         if (
           this.downloadProgress.downloadedFiles ===
@@ -146,6 +149,24 @@ export class Downloader extends EventEmitter {
           this.emit(`${this.downloadId ? `${this.downloadId}:` : ''}complete`)
         } else {
           this.downloadNextFile()
+        }
+      }
+
+      writer.on('finish', () => {
+        if (ext.includes('zip')) {
+          this.emit(
+            `${this.downloadId ? `${this.downloadId}:` : ''}decompress:started`,
+          )
+          const zipFile = createReadStream(location).pipe(
+            unzipper.Extract({
+              path: this.installPath,
+            }),
+          )
+          zipFile.on('close', () => {
+            nextStep()
+          })
+        } else {
+          nextStep()
         }
       })
     } catch (error) {
@@ -178,10 +199,15 @@ export class Downloader extends EventEmitter {
     const fileDownload =
       this.fileDownloads[this.downloadProgress.downloadedFiles]
 
+    const location = join(
+      this.installPath,
+      fileDownload.hash + fileDownload.ext,
+    )
+
     try {
       if (fileDownload) {
-        const dir = await this.createPath(fileDownload.path)
-        const fileName = basename(fileDownload.path)
+        const dir = await this.createPath(location)
+        const fileName = basename(location)
         await this.createFile(dir, fileName)
         await this.downloadFile(fileDownload)
       } else {

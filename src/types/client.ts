@@ -17,11 +17,11 @@ export interface Client {
   publishedAt: string
   locale: string
   slug: string
-  screenshots: StrapiDataMultiple<StrapiMedia>
-  background: StrapiDataSingle<StrapiMedia>
-  poster: StrapiDataSingle<StrapiMedia>
-  mainFile: StrapiDataSingle<StrapiFile>
-  updateFile: StrapiDataSingle<StrapiFile>
+  screenshots: StrapiDataMultiple<StrapiAttributes<StrapiMedia>>
+  background: StrapiDataSingle<StrapiAttributes<StrapiMedia>>
+  poster: StrapiDataSingle<StrapiAttributes<StrapiMedia>>
+  mainFile: StrapiDataSingle<StrapiAttributes<StrapiFile>>
+  updateFile: StrapiDataSingle<StrapiAttributes<StrapiFile>>
   version: StrapiDataSingle<StrapiAttributes<MinecraftClient>>
   keywords: StrapiDataMultiple<StrapiAttributes<Keyword>>
   available: boolean

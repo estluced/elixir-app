@@ -22,8 +22,6 @@ function DownloadCard({
 
   const [isExpanded, setIsExpanded] = useState<boolean>(false)
 
-  console.log(manifestPath)
-
   useEffect(() => {
     ipcRenderer.on(`core/download/${id}/start`, (downloadInfo) => {
       console.log('Download started', downloadInfo)
@@ -31,7 +29,7 @@ function DownloadCard({
 
     ipcRenderer.on(`core/download/${id}/complete`, (downloadInfo) => {
       removeDownload(downloadInfo.id)
-      ipcRenderer.sendMessage('core/library/check-client-exists', manifestPath)
+      // ipcRenderer.sendMessage('core/library/check-client-exists', manifestPath)
     })
 
     ipcRenderer.on(`core/download/${id}/file:progress`, (progressData) => {

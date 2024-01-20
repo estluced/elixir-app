@@ -2,16 +2,21 @@ import { useRef } from 'react'
 import { Box, Typography } from '@mui/material'
 import Button from '@mui/material/Button'
 import { Close } from '@mui/icons-material'
+import { useSelector } from 'react-redux'
 import { StyledPaper } from '../styles'
 import { useDownloadCenter } from '../../providers/DownloadCenter'
 import { DownloadCenterContainer } from './styles'
 import useClickOutside from '../../hooks/useClickOutside'
 import DownloadCard from './Card'
+import { RootState } from '../../store'
 
 function DownloadCenterModal() {
   const downloadCenterRef = useRef(null)
   const { modalIsOpen, handleCloseDownloadCenter, downloadsList } =
     useDownloadCenter()
+  const downloads = useSelector(
+    (state: RootState) => state.downloads.downloadsList,
+  )
 
   useClickOutside(downloadCenterRef, handleCloseDownloadCenter)
 
@@ -81,7 +86,7 @@ function DownloadCenterModal() {
             paddingBottom: '5px',
           }}
         >
-          {!downloadsList.length ? (
+          {!downloads.length ? (
             <Box
               sx={{
                 display: 'flex',
@@ -100,16 +105,13 @@ function DownloadCenterModal() {
               </Typography>
             </Box>
           ) : (
-            downloadsList.map((download) => (
-              <>
-                {console.log(download, 'path')}
-                <DownloadCard
-                  key={download.id}
-                  id={download.id}
-                  filename={download.filename}
-                  manifestPath={download.manifestPath}
-                />
-              </>
+            downloads.map((download) => (
+              <DownloadCard
+                key={`download-${download.attributes.hash}`}
+                id={download.id}
+                filename={download.attributes.name}
+                manifestPath={download.attributes.url}
+              />
             ))
           )}
         </Box>

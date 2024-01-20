@@ -1,9 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { DownloadItem } from '../../../types/downloads'
-import { DownloadListItem } from '../../providers/DownloadCenter'
+import { StrapiAttributes, StrapiFile } from '../../../types/strapi'
 
 interface DownloadsState {
-  downloadsList: DownloadListItem[]
+  downloadsList: StrapiAttributes<StrapiFile>[]
 }
 
 const initialState: DownloadsState = {
@@ -14,7 +13,12 @@ export const downloadsSlice = createSlice({
   name: 'downloads',
   initialState,
   reducers: {
-    download: (store, action: PayloadAction<DownloadItem>) => {},
+    addDownload: (
+      store,
+      action: PayloadAction<StrapiAttributes<StrapiFile>>,
+    ) => {
+      store.downloadsList.push(action.payload)
+    },
     removeDownload: (store, action: PayloadAction<number>) => {
       store.downloadsList = store.downloadsList.filter(
         (x) => x.id !== action.payload,
@@ -23,6 +27,6 @@ export const downloadsSlice = createSlice({
   },
 })
 
-export const { download, removeDownload } = downloadsSlice.actions
+export const { addDownload, removeDownload } = downloadsSlice.actions
 
 export default downloadsSlice.reducer
