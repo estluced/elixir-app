@@ -9,7 +9,7 @@ export default function Button(theme: Theme): Components['MuiButton'] {
       },
       contained: {
         '&.Mui-disabled': {
-          backgroundColor: theme.palette.primary.main,
+          backgroundColor: theme.palette.background.default,
           opacity: 0.6,
           color: theme.palette.text.primary,
         },

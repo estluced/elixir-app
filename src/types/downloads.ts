@@ -1,12 +1,24 @@
-export interface DownloadItem {
-  id: number | string
-  filename: string
+export interface FileMetadata {
+  path: string
+  sha256: string
+  size: number
   url: string
-  manifestPath: string
+  isDir: boolean
+  name: string
 }
 
-export interface DownloadListItem {
-  id: number | string
-  filename: string
-  manifestPath: string
+export interface FilesMetadata {
+  [key: string]: FileMetadata[]
+}
+
+export interface DownloadProgress {
+  totalFiles: number
+  downloadedFiles: number
+  speed: number
+}
+
+export interface DownloadFileProgress {
+  progress: number
+  size: number
+  speed: string
 }

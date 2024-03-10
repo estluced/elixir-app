@@ -1,61 +1,176 @@
 import { ipcMain, IpcMainEvent } from 'electron'
-import { Downloader } from '../utils/downloader'
+import { join } from 'path'
+import { existsSync, promises, readFileSync, symlinkSync, rmSync } from 'fs'
+import Downloader, { DownloadFile } from '../utils/downloader'
 import LauncherStore from '../utils/store'
-import { StrapiAttributes, StrapiFile } from '../../types/strapi'
+import request from '../../api/request'
+import { FilesMetadata } from '../../types/downloads'
+import { Client, ClientStatusEnum } from '../../types/client'
 
-const downloadHandler = async (
-  event: IpcMainEvent,
-  downloadFile: StrapiAttributes<StrapiFile>,
-) => {
+const initSkinsSymlink = (destination: string) => {
   const store = LauncherStore.getInstance()
-  const { id } = downloadFile
   const installationPath = String(store.get('installation-path'))
-  const downloader = new Downloader({
-    downloadId: id,
-    installPath: installationPath,
-  })
-  downloader.addDownloads([downloadFile.attributes])
-  downloader.startDownload()
+  const userDataPath = join(installationPath, 'user-data')
 
-  downloader.on(`${id}:start`, () => {
-    event.reply(`core/download/${id}/start`, downloadFile.attributes)
-  })
+  const skinsDir = join(userDataPath, 'skins')
 
-  downloader.on(`${id}:complete`, () => {
-    event.reply(`core/download/${id}/complete`, downloadFile.attributes)
-  })
+  rmSync(destination, { recursive: true, force: true })
+  symlinkSync(skinsDir, destination, 'junction')
+}
 
-  downloader.on(`${id}:file:progress`, (progressData) => {
-    console.log(progressData)
-    event.reply(`core/download/${id}/file:progress`, progressData)
-  })
+const initCapesSymlink = (destination: string) => {
+  const store = LauncherStore.getInstance()
+  const installationPath = String(store.get('installation-path'))
+  const userDataPath = join(installationPath, 'user-data')
 
-  downloader.on(`${id}:total:progress`, (progress) => {
-    console.log(progress)
-    event.reply(`core/download/${id}/total:progress`, progress)
-  })
+  const capesDir = join(userDataPath, 'capes')
 
-  downloader.on(`${id}:paused`, () => {
-    event.reply(`core/download/${id}/paused`, true)
-  })
+  rmSync(destination, { recursive: true, force: true })
+  symlinkSync(capesDir, destination, 'junction')
+}
 
-  downloader.on(`${id}:resumed`, () => {
-    event.reply(`core/download/${id}/resumed`, false)
-  })
+const downloadHandler = async (event: IpcMainEvent, client: Client) => {
+  const store = LauncherStore.getInstance()
 
-  ipcMain.on(`core/download/${id}/pause`, () => {
-    downloader.pauseDownload()
-  })
+  try {
+    event.reply(`core/download/${client.uuid}/start`, {
+      status: ClientStatusEnum.DOWNLOADING,
+    })
 
-  ipcMain.on(`core/download/${id}/resume`, () => {
-    downloader.resumeDownload()
-  })
+    const clientMetadata: FilesMetadata = await request(
+      client.metadataUrl,
+    ).then((res) => res.json())
 
-  ipcMain.on(`core/download/${id}/cancel`, () => {
-    downloader.cancelDownload()
-  })
+    const installationPath = String(store.get('installation-path'))
+    const installPath = join(installationPath, client.uuid)
 
-  event.reply('core/download', downloadFile.attributes)
+    const localMetadataPath = join(installPath, 'version-metadata.json')
+
+    const files = Object.values(clientMetadata)
+      .flat()
+      .sort((a) => (a.name === 'version-hash' ? 1 : -1))
+      .map((downloadFile: DownloadFile) => {
+        const path = join(installPath, downloadFile.path)
+
+        if (downloadFile.path.includes('CustomSkinLoader/LocalSkin/skins')) {
+          return {
+            ...downloadFile,
+            path,
+            afterDirCreate: (destination: string) =>
+              initSkinsSymlink(destination),
+          }
+        }
+
+        if (downloadFile.path.includes('CustomSkinLoader/LocalSkin/capes')) {
+          return {
+            ...downloadFile,
+            path,
+            afterDirCreate: (destination: string) =>
+              initCapesSymlink(destination),
+          }
+        }
+
+        return {
+          ...downloadFile,
+          path,
+        }
+      })
+
+    if (existsSync(localMetadataPath)) {
+      const localMetadata = JSON.parse(
+        readFileSync(localMetadataPath, 'utf-8') || '{}',
+      ) as FilesMetadata
+
+      const localFiles = Object.values(localMetadata)
+        .flat()
+        .sort((a) => (a.name === 'version-hash' ? 1 : -1))
+        .map((downloadFile) => ({
+          ...downloadFile,
+          path: join(installPath, downloadFile.path),
+        }))
+
+      const filesPaths = files.map((file) => file.path)
+
+      const filesToRemove = localFiles.filter(
+        (file) => !filesPaths.includes(file.path),
+      )
+
+      filesToRemove
+        .sort((a, b) => {
+          if (a.isDir && !b.isDir) return 1
+          if (!a.isDir && b.isDir) return -1
+          return 0
+        })
+        .forEach((file) => {
+          if (existsSync(file.path)) {
+            rmSync(file.path, {
+              recursive: true,
+              force: true,
+            })
+          }
+        })
+    }
+
+    const downloader = new Downloader({
+      downloadId: client.uuid,
+    })
+
+    downloader.addDownloads(files)
+
+    downloader.on(`${client.uuid}:progress`, (progress) => {
+      event.reply(`core/download/${client.uuid}/total:progress`, {
+        status: ClientStatusEnum.DOWNLOADING,
+        progress,
+      })
+    })
+
+    downloader.on(`${client.uuid}:complete`, () => {
+      event.reply(`core/download/${client.uuid}/complete`, {
+        status: ClientStatusEnum.INSTALLED,
+      })
+      downloader.removeAllListeners()
+    })
+
+    downloader.on(`${client.uuid}:error`, (error) => {
+      event.reply(`core/error`, {
+        error,
+      })
+      event.reply(`core/download/${client.uuid}/complete`, {
+        status: ClientStatusEnum.NOT_INSTALLED,
+      })
+      downloader.removeAllListeners()
+    })
+
+    ipcMain.on(`core/download/${client.uuid}/pause`, () => {
+      downloader.pause()
+      event.reply(`core/download/${client.uuid}/paused`, true)
+    })
+
+    ipcMain.on(`core/download/${client.uuid}/resume`, () => {
+      downloader.resume()
+      event.reply(`core/download/${client.uuid}/resumed`, false)
+    })
+
+    ipcMain.on(`core/download/${client.uuid}/cancel`, () => {
+      downloader.cancel()
+      event.reply(`core/download/${client.uuid}/complete`, {
+        status: ClientStatusEnum.NOT_INSTALLED,
+      })
+      downloader.removeAllListeners()
+      promises.rmdir(installPath, { recursive: true })
+    })
+  } catch (error) {
+    event.reply(`core/error`, {
+      error,
+    })
+    event.reply(`core/download/${client.uuid}/complete`, {
+      status: ClientStatusEnum.NOT_INSTALLED,
+    })
+    event.reply(`core/download/${client.uuid}/error`, {
+      status: ClientStatusEnum.ERROR,
+      error,
+    })
+  }
 }
 
 export default downloadHandler

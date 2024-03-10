@@ -1,4 +1,11 @@
-import { Grid, TextField, Button } from '@mui/material'
+import {
+  Grid,
+  TextField,
+  Button,
+  Paper,
+  Typography,
+  CircularProgress,
+} from '@mui/material'
 import { ChangeEvent, useState } from 'react'
 import { AuthContainer } from './styles'
 import { login } from '../../../api/auth'
@@ -8,6 +15,9 @@ const AuthPage = () => {
   const { localStore } = usePreload()
   const [nickname, setNickname] = useState<string>('')
   const [password, setPassword] = useState<string>('')
+
+  const [error, setError] = useState<string>('')
+  const [loading, setLoading] = useState<boolean>(false)
 
   const handleNicknameChange = (e: ChangeEvent<HTMLInputElement>) => {
     setNickname(e.target.value)
@@ -19,45 +29,90 @@ const AuthPage = () => {
 
   const handleSubmit = () => {
     if (nickname?.length < 3 || password?.length < 3) {
-      return
+      return setError('Nickname or password must be at least 3 characters long')
     }
+    setLoading(true)
     login({
       identifier: nickname,
       password,
-    }).then((res) => {
-      localStore.set('_jwt', res.jwt)
-      localStore.set('account', JSON.stringify(res.user))
-      window.location.reload()
     })
+      .then((res) => {
+        if (res.error) {
+          setError('Something went wrong, please try again')
+          return
+        }
+        localStore.set('_jwt', res.jwt)
+        localStore.set('account', JSON.stringify(res.user))
+        window.location.reload()
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+    return null
   }
 
   return (
-    <AuthContainer>
+    <AuthContainer container alignContent="center" justifyContent="center">
       <Grid
         container
+        component={Paper}
         direction="column"
+        wrap="nowrap"
         sx={{
           maxWidth: '400px',
+          padding: '50px 40px',
         }}
         gap="20px"
-        onKeyDown={(e) => {
+        onKeyDown={(e: { key: string }) => {
           if (e.key === 'Enter') {
             handleSubmit()
           }
         }}
       >
-        <h1>Auth</h1>
+        <Typography
+          variant="h3"
+          mb="22px"
+          fontWeight={700}
+          sx={{
+            textAlign: 'center',
+          }}
+        >
+          Login
+        </Typography>
         <TextField
+          error={!!error.length}
           label="Nickname"
           onChange={handleNicknameChange}
-          variant="filled"
+          variant="outlined"
         />
         <TextField
+          error={!!error.length}
+          type="password"
           label="Password"
+          helperText={error}
           onChange={handlePasswordChange}
-          variant="filled"
+          variant="outlined"
         />
-        <Button onClick={handleSubmit}>Submit</Button>
+        <Button
+          onClick={handleSubmit}
+          sx={{
+            width: '200px',
+            borderRadius: '12px',
+            margin: '0 auto',
+          }}
+          variant="contained"
+        >
+          {loading ? (
+            <CircularProgress
+              sx={{
+                color: '#222',
+              }}
+              size={20}
+            />
+          ) : (
+            <Typography fontWeight={600}>Submit</Typography>
+          )}
+        </Button>
       </Grid>
     </AuthContainer>
   )

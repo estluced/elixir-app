@@ -1,16 +1,13 @@
 import { ipcMain } from 'electron'
 import downloadHandler from '../handlers/download'
-import {
-  checkClientIsInstalled,
-  getClients,
-  getClientManifest,
-} from '../handlers/library'
+import { checkClientIsInstalled, getClients } from '../handlers/library'
+import launchHandler from '../handlers/launch'
 
 const CoreEvents = () => {
-  ipcMain.on('core/download', downloadHandler)
+  ipcMain.on('core/download/start', downloadHandler)
+  ipcMain.on('core/launch/client', launchHandler)
   ipcMain.on('core/library/check-client-exists', checkClientIsInstalled)
   ipcMain.on('core/library/get-clients', getClients)
-  ipcMain.on('core/library/get-client-manifest', getClientManifest)
 }
 
 export default CoreEvents

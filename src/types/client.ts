@@ -8,6 +8,18 @@ import {
 import { MinecraftClient } from './minecraft'
 import { Keyword } from './keyword'
 
+export enum ClientStatusEnum {
+  INSTALLED = 'installed',
+  NOT_INSTALLED = 'not-installed',
+  OUTDATED = 'outdated',
+  ERROR = 'error',
+  DOWNLOADING = 'downloading',
+  LAUNCHED = 'launched',
+}
+
+export type ClientStatus =
+  (typeof ClientStatusEnum)[keyof typeof ClientStatusEnum]
+
 export interface Client {
   title: string
   description: string
@@ -20,9 +32,11 @@ export interface Client {
   screenshots: StrapiDataMultiple<StrapiAttributes<StrapiMedia>>
   background: StrapiDataSingle<StrapiAttributes<StrapiMedia>>
   poster: StrapiDataSingle<StrapiAttributes<StrapiMedia>>
-  mainFile: StrapiDataSingle<StrapiAttributes<StrapiFile>>
-  updateFile: StrapiDataSingle<StrapiAttributes<StrapiFile>>
-  version: StrapiDataSingle<StrapiAttributes<MinecraftClient>>
+  version: string
   keywords: StrapiDataMultiple<StrapiAttributes<Keyword>>
   available: boolean
+  uuid: string
+  metadataUrl: string
+  versionHashUrl: string
+  status: ClientStatus
 }

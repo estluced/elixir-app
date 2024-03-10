@@ -1,252 +1,170 @@
-import { createWriteStream, promises, createReadStream } from 'fs'
-import { basename, dirname, join } from 'path'
-import { EventEmitter } from 'events'
+import { AsyncResultCallback, queue, QueueObject } from 'async'
 import { request } from 'undici'
-import unzipper from 'unzipper'
-import { StrapiFile } from '../../types/strapi'
-import getConfig from '../../utils/getConfig'
+import { createWriteStream, promises, existsSync, statSync } from 'fs'
+import { dirname } from 'path'
+import crypto from 'crypto'
+import { EventEmitter } from 'events'
+import { FileMetadata } from '../../types/downloads'
 
-const config = getConfig()
-
-export interface DownloadFile {
-  path: string
-  sha256: string
-  size: number
-  url: string
-  func?: (file: DownloadFile) => void
+export interface DownloaderProps {
+  downloadId?: number | string
 }
 
-export interface DownloadProgress {
-  totalFiles: number
-  downloadedFiles: number
-  progress: number
+export interface DownloadFile extends FileMetadata {
+  afterDirCreate?: (destination: string) => void
 }
 
-export interface DownloadFileProgress {
-  progress: number
-  size: number
-  speed: string
-}
-
-export class Downloader extends EventEmitter {
-  private fileDownloads: StrapiFile[]
-
-  private readonly downloadProgress: DownloadProgress
-
-  private isPaused: boolean
-
-  private isError: boolean
+class Downloader extends EventEmitter {
+  private queue: QueueObject<DownloadFile>
 
   private readonly downloadId?: number | string
 
-  public readonly installPath?: string
+  private downloadSpeed: number = 0
 
-  private speedTracker: {
-    startTime: number
-    startBytes: number
-    speed: string
-  } | null
+  public totalFiles: number = 0
 
-  constructor(props?: { downloadId?: number | string; installPath: string }) {
+  constructor({ downloadId }: DownloaderProps = {}) {
     super()
-    this.installPath = props?.installPath
-    this.downloadId = props?.downloadId
-    this.fileDownloads = []
-    this.downloadProgress = {
-      totalFiles: 0,
-      downloadedFiles: 0,
-      progress: 0,
-    }
-    this.speedTracker = {
-      startTime: Date.now(),
-      startBytes: 0,
-      speed: '0 B/s',
-    }
-    this.isPaused = false
-    this.isError = false
-  }
 
-  public addDownloads(files: StrapiFile[]) {
-    this.downloadProgress.totalFiles = files.length
-    this.fileDownloads = [...this.fileDownloads, ...files]
-  }
+    this.downloadId = downloadId
 
-  private async createPath(location: string): Promise<string> {
-    const dir = dirname(location)
-    await promises.mkdir(dir, { recursive: true })
-    return dir
-  }
+    this.queue = queue(this.downloadWorker.bind(this), 1)
 
-  private async createFile(dir: string, fileName: string): Promise<void> {
-    const filePath = join(dir, fileName)
-    await promises.writeFile(filePath, '')
-  }
-
-  private formatBytes(bytes: number): string {
-    if (bytes < 1024) {
-      return `${bytes.toFixed(0)} B`
-    }
-    if (bytes < 1024 * 1024) {
-      return `${(bytes / 1024).toFixed(0)} KB`
-    }
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  }
-
-  private updateSpeed(downloadedBytes: number): void {
-    if (this.speedTracker != null) {
-      const currentTime = Date.now()
-      const elapsedTime = (currentTime - this.speedTracker.startTime) / 1000
-      const bytesPerSecond =
-        (downloadedBytes - this.speedTracker.startBytes) / elapsedTime
-      this.speedTracker.speed = `${this.formatBytes(bytesPerSecond)}/s`
-    }
-  }
-
-  private async downloadFile(downloadFile: StrapiFile): Promise<void> {
-    const { url, size, hash, ext } = downloadFile
-    const location = join(this.installPath, hash + ext)
-    this.speedTracker = {
-      startTime: Date.now(),
-      startBytes: 0,
-      speed: '0 B/s',
-    }
-    let downloadedBytes = 0
-
-    try {
-      const { body, headers } = await request(config.API_URL_V2 + url, {
-        method: 'GET',
+    this.queue.drain(() => {
+      this.emitEvent('complete', {
+        totalFiles: this.totalFiles,
+        downloadedFiles: this.totalFiles,
+        speed: 0,
       })
+      this.downloadSpeed = 0
+      this.queue.kill()
+    })
 
-      const writer = createWriteStream(location)
-      const contentLength = size ?? headers['content-length']
-
-      body.on('data', (chunk: any) => {
-        writer.write(chunk)
-        downloadedBytes += chunk.length
-        this.updateSpeed(downloadedBytes)
-        const progress = (downloadedBytes / Number(contentLength)) * 100
-        const downloadFileProgressData: DownloadFileProgress = {
-          progress,
-          size: Number(contentLength),
-          speed: this.speedTracker?.speed ?? '0 B/s',
-        }
-        this.emit(
-          `${this.downloadId ? `${this.downloadId}:` : ''}file:progress`,
-          downloadFileProgressData,
-        )
+    this.queue.error((err) => {
+      this.emitEvent('error', {
+        error: err,
       })
+      this.queue.kill()
+    })
 
-      body.on('end', () => {
-        writer.end()
+    this.queue.saturated(() => {
+      const queueLength = this.queue.length()
+      this.emitEvent('progress', {
+        totalFiles: this.totalFiles,
+        downloadedFiles: this.totalFiles - queueLength,
+        speed: this.downloadSpeed,
       })
-
-      const nextStep = () => {
-        this.updateTotalProgress()
-        if (
-          this.downloadProgress.downloadedFiles ===
-          this.downloadProgress.totalFiles
-        ) {
-          this.emit(`${this.downloadId ? `${this.downloadId}:` : ''}complete`)
-        } else {
-          this.downloadNextFile()
-        }
-      }
-
-      writer.on('finish', () => {
-        if (ext.includes('zip')) {
-          this.emit(
-            `${this.downloadId ? `${this.downloadId}:` : ''}decompress:started`,
-          )
-          const zipFile = createReadStream(location).pipe(
-            unzipper.Extract({
-              path: this.installPath,
-            }),
-          )
-          zipFile.on('close', () => {
-            nextStep()
-          })
-        } else {
-          nextStep()
-        }
-      })
-    } catch (error) {
-      this.emit('error', error)
-      this.updateTotalProgress()
-    }
+    })
   }
 
-  private updateTotalProgress(): void {
-    // eslint-disable-next-line no-plusplus
-    this.downloadProgress.downloadedFiles++
+  private emitEvent(event: string, ...args: any[]) {
     this.emit(
-      `${this.downloadId ? `${this.downloadId}:` : ''}total:progress`,
-      this.downloadProgress,
+      `${this.downloadId ? `${this.downloadId}:` : ''}${event}`,
+      ...args,
     )
   }
 
-  private async downloadNextFile(): Promise<void> {
-    if (this.isPaused || this.isError) {
-      return
-    }
+  public addDownloads(files: DownloadFile[]) {
+    this.totalFiles = files.length
+    files.forEach((file) => {
+      this.queue.push(file)
+    })
+    this.emitEvent('start')
+  }
 
-    if (
-      this.downloadProgress.downloadedFiles === this.downloadProgress.totalFiles
-    ) {
-      this.emit(`${this.downloadId ? `${this.downloadId}:` : ''}complete`)
-      return
-    }
+  public pause() {
+    this.queue.pause()
+    this.downloadSpeed = 0
+  }
 
-    const fileDownload =
-      this.fileDownloads[this.downloadProgress.downloadedFiles]
+  public resume() {
+    this.queue.resume()
+  }
 
-    const location = join(
-      this.installPath,
-      fileDownload.hash + fileDownload.ext,
-    )
+  public cancel() {
+    this.queue.kill()
+    this.downloadSpeed = 0
+  }
 
+  private async downloadWorker(
+    file: DownloadFile,
+    cb: AsyncResultCallback<() => void>,
+  ) {
     try {
-      if (fileDownload) {
-        const dir = await this.createPath(location)
-        const fileName = basename(location)
-        await this.createFile(dir, fileName)
-        await this.downloadFile(fileDownload)
-      } else {
-        this.updateTotalProgress()
-        this.downloadNextFile()
+      const { url, path, sha256, isDir, afterDirCreate } = file
+      const startTime = Date.now()
+      let downloadedBytes = 0
+
+      if (isDir) {
+        await promises.mkdir(path, { recursive: true })
+        if (afterDirCreate) afterDirCreate(path)
+        cb()
+        return
       }
-    } catch (error) {
-      this.isError = true
-      this.emit('error', error)
+
+      if (existsSync(path)) {
+        const fileStat = statSync(path)
+        const fileHash = crypto
+          .createHash('sha256')
+          .update(String(fileStat.size))
+          .digest('hex')
+        if (fileHash === sha256) {
+          cb()
+          return
+        }
+      } else {
+        await promises.mkdir(dirname(path), { recursive: true })
+      }
+
+      const { body, statusCode } = await request(
+        url.replace('localhost', '127.0.0.1'),
+        {
+          method: 'GET',
+        },
+      )
+
+      if (statusCode === 200) {
+        const writer = createWriteStream(path)
+
+        body.on('data', (chunk) => {
+          writer.write(chunk)
+          downloadedBytes += chunk.length
+
+          const currentTime = Date.now()
+          const elapsedTime = (currentTime - startTime) / 1000
+
+          this.downloadSpeed = downloadedBytes / elapsedTime
+        })
+
+        body.on('error', (err) => {
+          writer.end()
+          writer.close()
+          cb(err)
+        })
+
+        body.on('end', () => {
+          writer.end()
+          writer.close()
+        })
+
+        writer.on('finish', () => {
+          cb()
+        })
+
+        writer.on('error', (err) => {
+          writer.end()
+          writer.close()
+          cb(err)
+        })
+      } else {
+        cb(new Error(`${statusCode} - ${url}`))
+      }
+    } catch (e) {
+      this.emitEvent('error', e)
+      this.queue.kill()
+      cb(e)
     }
-  }
-
-  public startDownload(): void {
-    this.emit(`${this.downloadId ? `${this.downloadId}:` : ''}start`)
-    this.downloadNextFile()
-  }
-
-  public pauseDownload(): void {
-    this.isPaused = true
-    this.emit(`${this.downloadId ? `${this.downloadId}:` : ''}paused`)
-  }
-
-  public cancelDownload(): void {
-    this.fileDownloads = []
-    this.isPaused = false
-    this.isError = false
-    this.downloadProgress.downloadedFiles = 0
-    this.downloadProgress.progress = 0
-    this.downloadProgress.totalFiles = 0
-    this.emit(`${this.downloadId ? `${this.downloadId}:` : ''}complete`)
-  }
-
-  public resumeDownload(): void {
-    this.isPaused = false
-    this.emit(`${this.downloadId ? `${this.downloadId}:` : ''}resumed`)
-    this.downloadNextFile()
-  }
-
-  public getEventListener() {
-    return this.on
   }
 }
+
+export default Downloader

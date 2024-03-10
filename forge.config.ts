@@ -35,6 +35,14 @@ const config: ForgeConfig = {
             name: 'preloader_window',
           },
           {
+            html: './src/console/index.html',
+            js: './src/console/index.ts',
+            name: 'console_window',
+            preload: {
+              js: './src/main/preload.ts',
+            },
+          },
+          {
             html: './src/renderer/index.html',
             js: './src/renderer/index.tsx',
             name: 'main_window',

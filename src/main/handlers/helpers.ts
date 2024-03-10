@@ -1,20 +1,27 @@
-import { IpcMainEvent, dialog, BrowserWindow, ipcMain } from 'electron'
-import { homedir } from 'os'
+import { IpcMainEvent, dialog, BrowserWindow, ipcMain, shell } from 'electron'
+import { homedir, totalmem } from 'os'
 import checkDiskSpace from 'check-disk-space'
 import { request } from 'undici'
-import fs from 'fs'
+import { existsSync, mkdirSync, unlinkSync, writeFileSync, rmdirSync } from 'fs'
+import { join } from 'path'
 import LauncherStore from '../utils/store'
 import { StrapiMedia } from '../../types/strapi'
 import getConfig from '../../utils/getConfig'
+import { Client } from '../../types/client'
+import { Account } from '../../types/account'
 
 const DEFAULT_PATH = `${homedir()}\\Elixir`
 
-const getDefaultInstallationPath = async () => {
-  const diskSpace = await checkDiskSpace(DEFAULT_PATH)
-  return {
+const getDefaultInstallationPath = async (
+  event: IpcMainEvent,
+  path: string | undefined,
+) => {
+  const installPath = path || DEFAULT_PATH
+  const diskSpace = await checkDiskSpace(installPath)
+  event.reply('helpers/get-installation-path', {
     ...diskSpace,
-    path: DEFAULT_PATH,
-  }
+    path: installPath,
+  })
 }
 
 const getDiskSpaceByPath = async (event: IpcMainEvent, path: string) => {
@@ -68,6 +75,13 @@ const selectFolderHandler = async (
   }
 }
 
+const openClientFolder = async (event: IpcMainEvent, client: Client) => {
+  const store = LauncherStore.getInstance()
+  const installationPath = store.get('installation-path')
+  const clientPath = join(String(installationPath), client.uuid)
+  await shell.openPath(clientPath)
+}
+
 const storeImage = async (event: IpcMainEvent, image: StrapiMedia) => {
   const config = getConfig()
   const imageUrl = `${config.API_URL_V2}${image.url}`
@@ -79,12 +93,12 @@ const storeImage = async (event: IpcMainEvent, image: StrapiMedia) => {
     const fileName = `${image.hash}${image.ext}`
     const filePath = `${outputDirectory}/${fileName}`
 
-    if (fs.existsSync(filePath)) {
+    if (existsSync(filePath)) {
       return
     }
 
-    if (!fs.existsSync(outputDirectory)) {
-      fs.mkdirSync(outputDirectory)
+    if (!existsSync(outputDirectory)) {
+      mkdirSync(outputDirectory)
     }
 
     const { body } = await request(imageUrl)
@@ -97,9 +111,163 @@ const storeImage = async (event: IpcMainEvent, image: StrapiMedia) => {
 
     const buffer = Buffer.concat(imageData)
 
-    fs.writeFileSync(filePath, buffer)
+    writeFileSync(filePath, buffer)
   } catch (error) {
     throw new Error(error)
+  }
+}
+
+const saveSkinInfo = async (
+  event: IpcMainEvent,
+  skinInfo: {
+    skin: string
+    cape: string
+  },
+) => {
+  try {
+    const store = LauncherStore.getInstance()
+    const { skin, cape } = skinInfo
+    const { username } = JSON.parse(
+      (store.get('account') as string) || '{}',
+    ) as Account
+    const installationPath = String(store.get('installation-path'))
+    const userDataPath = join(installationPath, 'user-data')
+
+    const skinsDir = join(userDataPath, 'skins')
+    const capeDir = join(userDataPath, 'capes')
+
+    if (!existsSync(skinsDir)) {
+      mkdirSync(skinsDir, { recursive: true })
+    }
+
+    if (!existsSync(capeDir)) {
+      mkdirSync(capeDir, { recursive: true })
+    }
+
+    const skinPath = join(skinsDir, `${username}.png`)
+    const capePath = join(capeDir, `${username}.png`)
+
+    if (skin) {
+      writeFileSync(
+        skinPath,
+        skin.replace(/^data:image\/png;base64,/, ''),
+        'base64',
+      )
+    }
+
+    if (cape) {
+      writeFileSync(
+        capePath,
+        cape.replace(/^data:image\/png;base64,/, ''),
+        'base64',
+      )
+    }
+
+    event.reply(`helpers/account/skin/save`, {
+      skin,
+      cape,
+    })
+  } catch (error) {
+    event.reply(`core/error`, {
+      error,
+    })
+  }
+}
+
+const resetSkinInfo = async (event: IpcMainEvent) => {
+  try {
+    const store = LauncherStore.getInstance()
+    const { username } = JSON.parse(
+      (store.get('account') as string) || '{}',
+    ) as Account
+    const installationPath = String(store.get('installation-path'))
+    const userDataPath = join(installationPath, 'user-data')
+
+    const skinsDir = join(userDataPath, 'skins')
+    const capeDir = join(userDataPath, 'capes')
+
+    const skinPath = join(skinsDir, `${username}.png`)
+    const capePath = join(capeDir, `${username}.png`)
+
+    const paths = [skinPath, capePath]
+
+    paths.forEach((path) => {
+      if (existsSync(path)) {
+        unlinkSync(path)
+      }
+    })
+
+    event.reply(`helpers/account/skin/reset`, {
+      skin: undefined,
+      cape: undefined,
+    })
+  } catch (error) {
+    event.reply(`core/error`, {
+      error,
+    })
+  }
+}
+
+const getSkinInfo = async (event: IpcMainEvent) => {
+  try {
+    const store = LauncherStore.getInstance()
+    const { username } = JSON.parse(
+      (store.get('account') as string) || '{}',
+    ) as Account
+    const installationPath = String(store.get('installation-path'))
+    const userDataPath = join(installationPath, 'user-data')
+
+    const skinsDir = join(userDataPath, 'skins')
+    const capeDir = join(userDataPath, 'capes')
+
+    const skinPath = join(skinsDir, `${username}.png`)
+    const capePath = join(capeDir, `${username}.png`)
+
+    const skin = existsSync(skinPath) ? skinPath : undefined
+    const cape = existsSync(capePath) ? capePath : undefined
+
+    event.reply(`helpers/account/skin`, {
+      skin,
+      cape,
+    })
+  } catch (error) {
+    event.reply(`core/error`, {
+      error,
+    })
+  }
+}
+
+const getRAMRangeArray = (event: IpcMainEvent) => {
+  const totalMemoryMB = Math.floor(totalmem() / 1024 / 1024)
+
+  const start = 2024
+  const end = totalMemoryMB % 2 === 0 ? totalMemoryMB : totalMemoryMB - 1
+  const step = 2000
+
+  const rangeArray = []
+
+  for (let i = start; i <= end; i += step) {
+    if (i % 2 === 0) {
+      rangeArray.push(i)
+    }
+  }
+
+  event.reply('helpers/get-ram-range-array', rangeArray)
+}
+
+const clearCache = async (event: IpcMainEvent) => {
+  try {
+    const store = LauncherStore.getInstance()
+    const installationPath = String(store.get('installation-path'))
+    const cachePath = join(installationPath, '.cache')
+
+    if (existsSync(cachePath)) {
+      rmdirSync(cachePath, { recursive: true })
+    }
+
+    event.reply('helpers/clear-cache', true)
+  } catch (error) {
+    event.reply('helpers/clear-cache', false)
   }
 }
 
@@ -110,4 +278,10 @@ export {
   getDefaultInstallationPath,
   getDiskSpaceByPath,
   storeImage,
+  openClientFolder,
+  saveSkinInfo,
+  getSkinInfo,
+  resetSkinInfo,
+  getRAMRangeArray,
+  clearCache,
 }

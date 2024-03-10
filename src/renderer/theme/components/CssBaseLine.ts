@@ -3,17 +3,16 @@ import { Components } from '@mui/material'
 export default function CssBaseLine(): Components['MuiCssBaseline'] {
   return {
     styleOverrides: {
-      '*::-webkit-scrollbar': {
-        width: '6px',
+      '::-webkit-scrollbar': {
+        display: 'none',
       },
-      '*::-webkit-scrollbar-track': {},
-      '*::-webkit-scrollbar-thumb': {
-        backgroundColor: '#555555',
-        borderRadius: '4px',
+      '#pages-root': {
+        position: 'inherit !important',
       },
       body: {
         margin: 0,
         overflowX: 'hidden',
+        backgroundColor: '#111111 !important',
       },
       '*': {
         userSelect: 'none',

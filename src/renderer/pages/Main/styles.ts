@@ -19,7 +19,7 @@ export const ClientBackgroundContainer = styled(Box, {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
-    filter: `brightness(0.4) ${enableGrayFilter ? 'grayscale(1)' : ''}`,
+    filter: `brightness(0.3) ${enableGrayFilter ? 'grayscale(1)' : ''}`,
   },
 }))
 

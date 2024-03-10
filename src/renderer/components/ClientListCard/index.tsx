@@ -1,11 +1,10 @@
-import { Box, Chip, Grid, Typography } from '@mui/material'
+import { Chip, Grid, Typography } from '@mui/material'
 import { Client } from '../../../types/client'
 import {
   ClientListCardContainer,
   ClientPosterContainer,
   ClientTitle,
 } from './styles'
-import Image from '../Image'
 import StrapiMedia from '../StrapiMedia'
 
 const ClientListCard = ({ poster, title, version, keywords }: Client) => {
@@ -17,7 +16,7 @@ const ClientListCard = ({ poster, title, version, keywords }: Client) => {
       <ClientTitle>
         <Typography>{title}</Typography>
         <Grid container gap="4px">
-          <Chip variant="outlined" label={version.data.attributes.version} />
+          <Chip variant="outlined" label={version} />
           {keywords.data.slice(0, 1).map((keyword) => (
             <Chip
               key={`keyword-${keyword.id}`}

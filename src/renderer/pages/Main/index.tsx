@@ -1,11 +1,11 @@
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 import { useEffect, useState } from 'react'
+import { Route, Routes, useLocation } from 'react-router-dom'
 import {
   ClientBackgroundContainer,
   ClientOverviewContainer,
   MainContainer,
 } from './styles'
-import usePreload from '../../hooks/usePreload'
 import { RootState } from '../../store'
 import ClientsNavigation from '../../components/ClientsNavigation'
 import { Client } from '../../../types/client'
@@ -21,6 +21,7 @@ const MainPage = () => {
   const [activeClient, setActiveClient] = useState<StrapiAttributes<Client>>()
   const [activeClientBackground, setActiveClientBackground] =
     useState<StrapiAttributes<IStrapiMedia>>()
+  const location = useLocation()
 
   useEffect(() => {
     if (clients.length) {
@@ -31,7 +32,7 @@ const MainPage = () => {
 
   const handleSetActiveClient = (clientId: number) => {
     const client = clients.find((client) => client.id === clientId)
-    setActiveClient(client)
+    location.pathname = `/${client?.id}`
     setActiveClientBackground(client?.attributes.background.data)
   }
 
@@ -46,8 +47,21 @@ const MainPage = () => {
       )}
       <MainContainer>
         <ClientOverviewContainer>
-          {activeClient?.attributes && (
-            <ClientOverview {...activeClient.attributes} />
+          {Boolean(clients.length) && (
+            <Routes>
+              <Route
+                index
+                path="/"
+                element={<ClientOverview {...clients[0].attributes} />}
+              />
+              {clients.map((client) => (
+                <Route
+                  key={client.id}
+                  path={`/${client.id}`}
+                  element={<ClientOverview {...client.attributes} />}
+                />
+              ))}
+            </Routes>
           )}
           <ClientsNavigation handleSetActiveClient={handleSetActiveClient} />
         </ClientOverviewContainer>

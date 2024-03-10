@@ -22,7 +22,6 @@ const StrapiMediaComponent = ({
   const imageFromUrl = `${config.API_URL_V2}${attributes.url}`
 
   useEffect(() => {
-    console.log(imageFromCache, imageFromUrl)
     const imgFromCache = new Image()
     imgFromCache.src = imageFromCache
     imgFromCache.onload = () => {

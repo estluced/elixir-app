@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Console</title>
+    <style>
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2e2e2e;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3e3e3e;
+        }
+    </style>
+</head>
+<body style="background-color: black">
+    <div id="root"></div>
+    <script>
+        const { ipcRenderer } = window.electron
+        const terminalRoot = document.getElementById('root')
+
+        ipcRenderer.on('core/console/stdout', (e) => {
+            window.scrollTo(0, document.body.scrollHeight + 100)
+            const status = e.status
+            const stroke = e.stroke
+            switch (status) {
+                case 'error':
+                    terminalRoot.innerHTML += `<p style="color: red; white-space: pre-wrap">${stroke}</p>`
+                    break
+                case 'warning':
+                    terminalRoot.innerHTML += `<p style="color: orange; white-space: pre-wrap">${stroke}</p>`
+                    break
+                case 'info':
+                    terminalRoot.innerHTML += `<p style="color: white; white-space: pre-wrap">${stroke}</p>`
+                    break
+                default:
+                    terminalRoot.innerHTML += `<p style="color: white; white-space: pre-wrap">${stroke}</p>`
+            }
+        })
+    </script>
+</body>
+</html>

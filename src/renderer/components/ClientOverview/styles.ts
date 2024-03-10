@@ -3,8 +3,8 @@ import { Box, styled, Button } from '@mui/material'
 export const ClientOverviewContainer = styled(Box)({
   display: 'flex',
   flexDirection: 'column',
-  gap: '10px',
-  padding: '70px 50px',
+  gap: '30px',
+  padding: '55px 40px 70px 70px',
 })
 
 export const PlayButton = styled(Button)(({ theme }) => ({

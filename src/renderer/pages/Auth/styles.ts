@@ -1,9 +1,5 @@
-import { Box, styled } from '@mui/material'
+import { Grid, styled } from '@mui/material'
 
-export const AuthContainer = styled(Box)({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
+export const AuthContainer = styled(Grid)({
   height: '100vh',
-  width: '100vw',
 })

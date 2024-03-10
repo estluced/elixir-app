@@ -7,10 +7,13 @@ export default {
     main: '#198a51',
   },
   background: {
-    paper: 'linear-gradient(180deg, #333333, #222222)',
+    paper: 'linear-gradient(180deg, #222222, #111111)',
     default: '#222222',
   },
-  divider: '#333333',
+  common: {
+    black: '#111111',
+  },
+  divider: '#ffffff',
   text: {
     secondary: '#000000',
     primary: '#ffffff',

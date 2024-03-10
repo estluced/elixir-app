@@ -20,6 +20,7 @@ module.exports = {
     'react/function-component-definition': 'off',
     'react/no-unstable-nested-components': 'off',
     'class-methods-use-this': 'off',
+    'no-template-curly-in-string': 'off',
     'prettier/prettier': [
       'warn',
       {
@@ -47,5 +48,8 @@ module.exports = {
     'import/parsers': {
       '@typescript-eslint/parser': ['.ts', '.tsx'],
     },
+  },
+  globals: {
+    NodeJS: true,
   },
 }

@@ -5,6 +5,12 @@ import {
   setInstallationPath,
   getDiskSpaceByPath,
   storeImage,
+  openClientFolder,
+  saveSkinInfo,
+  getSkinInfo,
+  resetSkinInfo,
+  getRAMRangeArray,
+  clearCache,
 } from '../handlers/helpers'
 
 const HelpersEvents = (window: BrowserWindow) => {
@@ -14,12 +20,7 @@ const HelpersEvents = (window: BrowserWindow) => {
 
   ipcMain.on('helpers/cache-image', storeImage)
 
-  ipcMain.on('helpers/get-default-installation-path', async (event) => {
-    event.reply(
-      'helpers/get-default-installation-path',
-      await getDefaultInstallationPath(),
-    )
-  })
+  ipcMain.on('helpers/get-installation-path', getDefaultInstallationPath)
 
   ipcMain.on('helpers/set-installation-path', setInstallationPath)
 
@@ -28,6 +29,18 @@ const HelpersEvents = (window: BrowserWindow) => {
   ipcMain.on('dev-reload', () => {
     window.webContents.reloadIgnoringCache()
   })
+
+  ipcMain.on('helpers/open-client-folder', openClientFolder)
+
+  ipcMain.on('helpers/account/skin/save', saveSkinInfo)
+
+  ipcMain.on('helpers/account/skin/reset', resetSkinInfo)
+
+  ipcMain.on('helpers/account/skin', getSkinInfo)
+
+  ipcMain.on('helpers/get-ram-range-array', getRAMRangeArray)
+
+  ipcMain.on('helpers/clear-cache', clearCache)
 }
 
 export default HelpersEvents

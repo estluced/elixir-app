@@ -9,7 +9,8 @@ interface LoginPayload {
 interface LoginResponse {
   jwt: string
   user: Account
+  error?: string
 }
 
 export const login = async (payload: LoginPayload): Promise<LoginResponse> =>
-  request('/auth/local', 'POST', payload).then((res) => res.json())
+  request('/api/auth/local', 'POST', payload).then((res) => res.json())

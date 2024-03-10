@@ -2,26 +2,32 @@ import 'swiper/css'
 import 'swiper/css/grid'
 import 'swiper/css/autoplay'
 import 'swiper/css/parallax'
+import 'react-toastify/dist/ReactToastify.min.css'
 import { Box, CssBaseline, ThemeProvider } from '@mui/material'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Provider as ReduxProvider } from 'react-redux'
+import { toast, ToastContainer } from 'react-toastify'
 import Header from './components/Header'
 import theme from './theme'
 import SelectFolderModal from './modals/SelectFolder'
 import { DownloadCenterProvider } from './providers/DownloadCenter'
-import DownloadCenterModal from './modals/DownloadCenter'
 import { store as reduxRtkStore } from './store'
 import Pages from './pages'
-import { AppBackground, AppBackgroundContainer, AppContainer } from './styles'
-import Background from './assets/background.webp'
-import Image from './components/Image'
-import DownloadsHOC from './store/downloads/hoc'
+import { AppContainer } from './styles'
+import usePreload from './hooks/usePreload'
+import SettingsModal from './modals/Settings'
 
 export default function App() {
-  const { store } = window.electron
+  const { localStore, bridge } = usePreload()
   const [selectFolderModalOpen, setSelectFolderModalOpen] =
     useState<boolean>(false)
-  const path = store.get('installation-path')
+  const path = localStore.get('installation-path')
+
+  useEffect(() => {
+    bridge.on('core/error', ({ error }) => {
+      toast.error(error.message || error || 'An error occurred')
+    })
+  }, [])
 
   const handleCloseSelectFolderModal = () => {
     setSelectFolderModalOpen(false)
@@ -29,29 +35,29 @@ export default function App() {
 
   return (
     <ReduxProvider store={reduxRtkStore}>
-      <DownloadsHOC />
       <ThemeProvider theme={theme}>
         <DownloadCenterProvider>
           <AppContainer>
-            <AppBackgroundContainer>
-              <Image src={Background} disableApi />
-            </AppBackgroundContainer>
             <CssBaseline />
-            <Header />
             <Box id="pages-root">
               <Pages />
             </Box>
             {path?.length && (
-              <>
-                <DownloadCenterModal />
-                <SelectFolderModal
-                  isOpen={selectFolderModalOpen}
-                  handleClose={handleCloseSelectFolderModal}
-                />
-              </>
+              <SelectFolderModal
+                isOpen={selectFolderModalOpen}
+                handleClose={handleCloseSelectFolderModal}
+              />
             )}
           </AppContainer>
         </DownloadCenterProvider>
+        <ToastContainer
+          position="bottom-right"
+          autoClose={5000}
+          closeOnClick
+          stacked
+          limit={3}
+          theme="dark"
+        />
       </ThemeProvider>
     </ReduxProvider>
   )

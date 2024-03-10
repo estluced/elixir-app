@@ -1,26 +1,9 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react'
-
-interface DownloadItem {
-  id: number | string
-  filename: string
-  url: string
-  manifestPath: string
-}
-
-export interface DownloadListItem {
-  id: number | string
-  filename: string
-  manifestPath: string
-}
+import React, { createContext, useContext, ReactNode } from 'react'
+import usePreload from '../hooks/usePreload'
+import { Client } from '../../types/client'
 
 interface DownloadCenterContextType {
-  state: DownloadItem[]
-  modalIsOpen: boolean
-  downloadsList: DownloadListItem[]
-  handleCloseDownloadCenter: () => void
-  handleOpenDownloadCenter: () => void
-  pushDownload: (download: DownloadItem) => void
-  removeDownload: (id: number | string) => void
+  addDownload: ({ metadataUrl, slug }: Client) => void
 }
 
 const DownloadCenterContext = createContext<
@@ -44,41 +27,16 @@ interface DownloadCenterProviderProps {
 export const DownloadCenterProvider: React.FC<DownloadCenterProviderProps> = ({
   children,
 }) => {
-  const { ipcRenderer } = window.electron
-  const [modalIsOpen, setModalIsOpen] = useState<boolean>(false)
-  const [state, setState] = useState<DownloadItem[]>([])
-  const [downloadsList, setDownloadsList] = useState<DownloadListItem[]>([])
+  const { bridge } = usePreload()
 
-  const pushDownload = (download: DownloadItem) => {
-    ipcRenderer
-      .sendMessage('core/download', download)
-      .on((downloadItem: DownloadListItem) => {
-        console.log(downloadItem)
-        setDownloadsList([...downloadsList, downloadItem])
-      })
+  const addDownload = (client: Client) => {
+    bridge.sendMessage('core/download/start', client)
   }
-
-  const removeDownload = (id: number | string) => {
-    const newDownloadsList = downloadsList.filter(
-      (download) => download.id !== id,
-    )
-    setDownloadsList(newDownloadsList)
-  }
-
-  const handleCloseDownloadCenter = () => setModalIsOpen(false)
-
-  const handleOpenDownloadCenter = () => setModalIsOpen(true)
 
   return (
     <DownloadCenterContext.Provider
       value={{
-        state,
-        modalIsOpen,
-        downloadsList,
-        handleCloseDownloadCenter,
-        handleOpenDownloadCenter,
-        pushDownload,
-        removeDownload,
+        addDownload,
       }}
     >
       {children}
