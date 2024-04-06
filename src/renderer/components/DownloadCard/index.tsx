@@ -15,6 +15,10 @@ interface DownloadCardProgress extends DownloadProgress {
   formattedSpeed: string
 }
 
+export interface DownloadCardProgressWithUuid extends DownloadCardProgress {
+  uuid: string
+}
+
 const DownloadCard = ({ uuid }: DownloadCardProps) => {
   const { bridge } = usePreload()
   const [isPaused, setIsPaused] = useState<boolean>(false)
@@ -27,8 +31,6 @@ const DownloadCard = ({ uuid }: DownloadCardProps) => {
     })
 
   useEffect(() => {
-    console.log(uuid)
-
     bridge.on(
       `core/download/${uuid}/total:progress`,
       (e: { status: ClientStatusEnum; progress: DownloadProgress }) => {

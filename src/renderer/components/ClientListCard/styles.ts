@@ -1,13 +1,23 @@
 import { Box, styled } from '@mui/material'
+import { ClientStatus, ClientStatusEnum } from '../../../types/client'
 
-export const ClientListCardContainer = styled(Box)(({ theme }) => ({
-  border: `1px solid #fff`,
+export const ClientListCardContainer = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'status',
+})<{
+  status: ClientStatus
+}>(({ theme, status }) => ({
+  border: `2px solid ${
+    status === ClientStatusEnum.LAUNCHED
+      ? theme.palette.success.light
+      : theme.palette.text.primary
+  }`,
   borderRadius: '8px',
   padding: '6px',
   backdropFilter: 'blur(100px)',
   display: 'flex',
   flexDirection: 'row',
   gap: '10px',
+  height: '75px',
   alignItems: 'center',
   cursor: 'pointer',
   transition: '0.1s ease-in-out',

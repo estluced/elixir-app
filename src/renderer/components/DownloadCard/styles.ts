@@ -1,15 +1,10 @@
-import { Box, Paper, styled } from '@mui/material'
+import { styled } from '@mui/material'
 import Button from '@mui/material/Button'
-
-export const DownloadCardContainer = styled(Paper)({
-  width: '300px',
-  padding: '8px',
-})
 
 export const StyledProgress = styled('progress')(({ theme }) => ({
   appearance: 'none',
   borderRadius: '8px',
-  border: `2px solid ${theme.palette.divider}`,
+  border: `2px solid ${theme.palette.background.default}`,
   transition: 'all 0.2s ease-in-out',
   zIndex: 0,
   width: 'calc(100% - 16px)',
@@ -21,7 +16,7 @@ export const StyledProgress = styled('progress')(({ theme }) => ({
     background: theme.palette.background.paper,
   },
   '&::-webkit-progress-value': {
-    backgroundColor: 'rgba(255, 82, 82, 1)',
+    backgroundColor: theme.palette.secondary.main,
     borderRadius: '0 6px 6px 0',
   },
   '&::-moz-progress-bar': {

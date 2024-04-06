@@ -1,8 +1,8 @@
 import { Box, Chip, Grid, Typography } from '@mui/material'
 import { PlayCircle, FolderOpen } from '@mui/icons-material'
 import marked from 'marked'
-import { useEffect, useState } from 'react'
-import { connect } from 'react-redux'
+import { useEffect } from 'react'
+import { connect, useDispatch } from 'react-redux'
 import { useLocation } from 'react-router-dom'
 import { Client, ClientStatus, ClientStatusEnum } from '../../../types/client'
 import { ClientOverviewContainer, PlayButton } from './styles'
@@ -11,9 +11,16 @@ import StrapiMedia from '../StrapiMedia'
 import usePreload from '../../hooks/usePreload'
 import { useDownloadCenter } from '../../providers/DownloadCenter'
 import DownloadCard from '../DownloadCard'
-import { DownloadProgress } from '../../../types/downloads'
+import { RootState } from '../../store'
+import { setClientStatus } from '../../store/clients/clientsSlice'
 
-const ClientOverview = (client: Client) => {
+const ClientOverview = ({
+  client,
+  clientId,
+}: {
+  client: Client
+  clientId: number
+}) => {
   const {
     title,
     shortDescription,
@@ -22,41 +29,42 @@ const ClientOverview = (client: Client) => {
     keywords,
     available,
     uuid,
+    status: clientStatus = ClientStatusEnum.INSTALLED,
   } = client
+
+  const dispatch = useDispatch()
   const location = useLocation()
   const { bridge } = usePreload()
   const parsedDescription = marked.parse(description)
   const { addDownload } = useDownloadCenter()
-  const [clientStatus, setClientStatus] = useState<ClientStatus>(
-    ClientStatusEnum.INSTALLED,
-  )
 
   const initBridgeEvents = () => {
-    bridge
-      .sendMessage('core/library/check-client-exists', client)
-      .on((e: { status: ClientStatus }) => setClientStatus(e.status))
-
     bridge.on(`core/download/${uuid}/start`, (e: { status: ClientStatus }) => {
-      setClientStatus(e.status)
+      dispatch(
+        setClientStatus({
+          id: clientId,
+          status: e.status,
+        }),
+      )
     })
 
     bridge.on(`core/download/${uuid}/complete`, (e: { status: ClientStatus }) =>
-      setClientStatus(e.status),
+      dispatch(
+        setClientStatus({
+          id: clientId,
+          status: e.status,
+        }),
+      ),
     )
 
     bridge.on(`core/launch/client/${uuid}`, (e: { status: ClientStatus }) => {
-      setClientStatus(e.status)
-      console.log(e)
+      dispatch(
+        setClientStatus({
+          id: clientId,
+          status: e.status,
+        }),
+      )
     })
-
-    bridge.on(
-      `core/download/${uuid}/total:progress`,
-      (e: { status: ClientStatusEnum; progress: DownloadProgress }) => {
-        const { status } = e
-        if (status === clientStatus) return
-        setClientStatus(status)
-      },
-    )
   }
 
   useEffect(() => {
@@ -65,7 +73,7 @@ const ClientOverview = (client: Client) => {
     console.log(location)
 
     return () => {
-      setClientStatus(ClientStatusEnum.INSTALLED)
+      // setClientStatus(ClientStatusEnum.INSTALLED)
     }
   }, [uuid])
 
@@ -209,4 +217,10 @@ const ClientOverview = (client: Client) => {
   )
 }
 
-export default ClientOverview
+export default connect(
+  (state: RootState) => ({
+    client: state.clients.activeClient?.attributes,
+    clientId: state.clients.activeClient?.id,
+  }),
+  {},
+)(ClientOverview)

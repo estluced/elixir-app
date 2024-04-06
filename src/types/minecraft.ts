@@ -1,3 +1,9 @@
+export interface MinecraftVersion {
+  title: string
+  version: string
+  forge?: string
+}
+
 export interface MinecraftClient {
   title: string
   version: string

@@ -8,10 +8,7 @@ import { StrapiAttributes, StrapiDataMultiple } from '../../types/strapi'
 import { Client, ClientStatusEnum } from '../../types/client'
 import getClientsFromApi from '../../api/getClients'
 
-export const checkClientIsInstalled = async (
-  event: IpcMainEvent,
-  client: Client,
-) => {
+const getClientStatus = async (client: Client) => {
   try {
     const store = LauncherStore.getInstance()
     const installationPath = String(store.get('installation-path'))
@@ -24,26 +21,35 @@ export const checkClientIsInstalled = async (
       )
       const localVersionHash = fs.readFileSync(versionHashPath, 'utf-8')
       if (remoteVersionHash !== localVersionHash) {
-        event.reply('core/library/check-client-exists', {
-          status: ClientStatusEnum.OUTDATED,
-        })
-        return
+        return ClientStatusEnum.OUTDATED
       }
     } else {
-      event.reply('core/library/check-client-exists', {
-        status: ClientStatusEnum.NOT_INSTALLED,
-      })
-      return
+      return ClientStatusEnum.NOT_INSTALLED
     }
-    event.reply('core/library/check-client-exists', {
-      status: ClientStatusEnum.INSTALLED,
-    })
+    return ClientStatusEnum.INSTALLED
   } catch (error) {
-    event.reply('core/library/check-client-exists', {
-      status: ClientStatusEnum.ERROR,
-      error,
-    })
+    return ClientStatusEnum.ERROR
   }
+}
+
+export const checkClientsStatuses = async (
+  event: IpcMainEvent,
+  clients: StrapiDataMultiple<StrapiAttributes<Client>>,
+) => {
+  const clientsPromises = clients.data.map(async ({ id, attributes }) => {
+    const status = await getClientStatus(attributes)
+    return {
+      id,
+      attributes: {
+        ...attributes,
+        status,
+      },
+    }
+  })
+
+  const clientsWithStatuses = await Promise.all(clientsPromises)
+
+  event.reply('core/library/get-clients-statuses', clientsWithStatuses)
 }
 
 export const getClients = (event: IpcMainEvent) => {

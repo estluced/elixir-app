@@ -44,3 +44,14 @@ export type StrapiFile = {
   updatedAt: string
   hash: string
 }
+
+export interface Locale {
+  id: number
+  name: string
+  code: string
+  isDefault: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type Locales = Locale[]

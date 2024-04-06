@@ -35,7 +35,10 @@ const getLogStrokeWithStatus = (stroke: string) => {
 
 const launchHandler = async (event: IpcMainEvent, client: Client) => {
   try {
-    const { version, uuid } = client
+    const { minecraftVersion, uuid } = client
+    const version =
+      minecraftVersion.data.attributes?.forge ||
+      minecraftVersion.data.attributes.version
     const store = LauncherStore.getInstance()
     const account = JSON.parse(
       (store.get('account') as string) || '{}',
@@ -46,7 +49,7 @@ const launchHandler = async (event: IpcMainEvent, client: Client) => {
 
     const installationPath = String(store.get('installation-path'))
     const gamePath = join(installationPath, uuid)
-    const javaPath = join(installationPath, uuid, 'runtime', 'bin', 'java')
+    const javaPath = join(installationPath, uuid, 'runtime', 'bin', 'javaw.exe')
 
     await launch({
       gamePath,

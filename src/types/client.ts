@@ -5,7 +5,7 @@ import {
   StrapiFile,
   StrapiMedia,
 } from './strapi'
-import { MinecraftClient } from './minecraft'
+import { MinecraftClient, MinecraftVersion } from './minecraft'
 import { Keyword } from './keyword'
 
 export enum ClientStatusEnum {
@@ -32,7 +32,7 @@ export interface Client {
   screenshots: StrapiDataMultiple<StrapiAttributes<StrapiMedia>>
   background: StrapiDataSingle<StrapiAttributes<StrapiMedia>>
   poster: StrapiDataSingle<StrapiAttributes<StrapiMedia>>
-  version: string
+  minecraftVersion: StrapiDataSingle<StrapiAttributes<MinecraftVersion>>
   keywords: StrapiDataMultiple<StrapiAttributes<Keyword>>
   available: boolean
   uuid: string

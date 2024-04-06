@@ -7,16 +7,25 @@ import {
 } from './styles'
 import StrapiMedia from '../StrapiMedia'
 
-const ClientListCard = ({ poster, title, version, keywords }: Client) => {
+const ClientListCard = ({
+  poster,
+  title,
+  minecraftVersion,
+  keywords,
+  status,
+}: Client) => {
   return (
-    <ClientListCardContainer>
+    <ClientListCardContainer status={status}>
       <ClientPosterContainer>
         <StrapiMedia {...poster.data} />
       </ClientPosterContainer>
       <ClientTitle>
-        <Typography>{title}</Typography>
+        <Typography fontWeight={600}>{title}</Typography>
         <Grid container gap="4px">
-          <Chip variant="outlined" label={version} />
+          <Chip
+            variant="outlined"
+            label={minecraftVersion.data.attributes.version}
+          />
           {keywords.data.slice(0, 1).map((keyword) => (
             <Chip
               key={`keyword-${keyword.id}`}

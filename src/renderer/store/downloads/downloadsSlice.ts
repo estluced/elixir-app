@@ -1,25 +1,34 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { StrapiAttributes, StrapiFile } from '../../../types/strapi'
+import { DownloadCardProgressWithUuid } from '../../components/DownloadCard'
 
 interface DownloadsState {
-  downloadsList: string[]
+  currentDownload: DownloadCardProgressWithUuid | null
 }
 
 const initialState: DownloadsState = {
-  downloadsList: [],
+  currentDownload: null,
 }
 
 export const downloadsSlice = createSlice({
   name: 'downloads',
   initialState,
   reducers: {
-    addDownload: (store, action: PayloadAction<string>) => {
-      store.downloadsList.push(action.payload)
+    addDownload: (
+      store,
+      action: PayloadAction<DownloadCardProgressWithUuid>,
+    ) => {
+      if (!store.currentDownload) {
+        store.currentDownload = action.payload
+      }
     },
-    removeDownload: (store, action: PayloadAction<string>) => {
-      store.downloadsList = store.downloadsList.filter(
-        (x) => x !== action.payload,
-      )
+    removeDownload: (
+      store,
+      action: PayloadAction<DownloadCardProgressWithUuid>,
+    ) => {
+      if (store.currentDownload?.uuid === action.payload.uuid) {
+        store.currentDownload = null
+      }
     },
   },
 })

@@ -1,6 +1,13 @@
 import { AsyncResultCallback, queue, QueueObject } from 'async'
 import { request } from 'undici'
-import { createWriteStream, promises, existsSync, statSync } from 'fs'
+import {
+  createWriteStream,
+  promises,
+  existsSync,
+  statSync,
+  rmSync,
+  unlinkSync,
+} from 'fs'
 import { dirname } from 'path'
 import crypto from 'crypto'
 import { EventEmitter } from 'events'
@@ -90,8 +97,8 @@ class Downloader extends EventEmitter {
     file: DownloadFile,
     cb: AsyncResultCallback<() => void>,
   ) {
+    const { url, path, sha256, isDir, afterDirCreate } = file
     try {
-      const { url, path, sha256, isDir, afterDirCreate } = file
       const startTime = Date.now()
       let downloadedBytes = 0
 
@@ -161,6 +168,15 @@ class Downloader extends EventEmitter {
       }
     } catch (e) {
       this.emitEvent('error', e)
+      try {
+        if (isDir) {
+          rmSync(path, { recursive: true, force: true })
+        } else {
+          unlinkSync(path)
+        }
+      } catch (err) {
+        this.emitEvent('error', e)
+      }
       this.queue.kill()
       cb(e)
     }

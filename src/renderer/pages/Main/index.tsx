@@ -1,6 +1,5 @@
-import { useSelector } from 'react-redux'
-import { useEffect, useState } from 'react'
-import { Route, Routes, useLocation } from 'react-router-dom'
+import { connect } from 'react-redux'
+import { useEffect } from 'react'
 import {
   ClientBackgroundContainer,
   ClientOverviewContainer,
@@ -8,61 +7,33 @@ import {
 } from './styles'
 import { RootState } from '../../store'
 import ClientsNavigation from '../../components/ClientsNavigation'
-import { Client } from '../../../types/client'
-import {
-  StrapiAttributes,
-  StrapiMedia as IStrapiMedia,
-} from '../../../types/strapi'
 import ClientOverview from '../../components/ClientOverview'
 import StrapiMedia from '../../components/StrapiMedia'
+import { setActiveClient, setClients } from '../../store/clients/clientsSlice'
+import { StrapiAttributes, StrapiDataMultiple } from '../../../types/strapi'
+import { Client } from '../../../types/client'
+import usePreload from '../../hooks/usePreload'
 
-const MainPage = () => {
-  const clients = useSelector((state: RootState) => state.clients.clients)
-  const [activeClient, setActiveClient] = useState<StrapiAttributes<Client>>()
-  const [activeClientBackground, setActiveClientBackground] =
-    useState<StrapiAttributes<IStrapiMedia>>()
-  const location = useLocation()
+interface MainPageProps {
+  activeClient: Client
+  setActiveClient: (clientId: number) => void
+}
 
-  useEffect(() => {
-    if (clients.length) {
-      setActiveClient(clients[0])
-      setActiveClientBackground(clients[0].attributes.background.data)
-    }
-  }, [clients])
+const MainPage = ({ activeClient, setActiveClient }: MainPageProps) => {
+  const activeClientBackground = activeClient?.background.data
 
-  const handleSetActiveClient = (clientId: number) => {
-    const client = clients.find((client) => client.id === clientId)
-    location.pathname = `/${client?.id}`
-    setActiveClientBackground(client?.attributes.background.data)
-  }
+  const handleSetActiveClient = (clientId: number) => setActiveClient(clientId)
 
   return (
     <>
       {activeClientBackground && (
-        <ClientBackgroundContainer
-          enableGrayFilter={!activeClient.attributes.available}
-        >
+        <ClientBackgroundContainer enableGrayFilter={!activeClient.available}>
           <StrapiMedia {...activeClientBackground} />
         </ClientBackgroundContainer>
       )}
       <MainContainer>
         <ClientOverviewContainer>
-          {Boolean(clients.length) && (
-            <Routes>
-              <Route
-                index
-                path="/"
-                element={<ClientOverview {...clients[0].attributes} />}
-              />
-              {clients.map((client) => (
-                <Route
-                  key={client.id}
-                  path={`/${client.id}`}
-                  element={<ClientOverview {...client.attributes} />}
-                />
-              ))}
-            </Routes>
-          )}
+          {activeClient && <ClientOverview />}
           <ClientsNavigation handleSetActiveClient={handleSetActiveClient} />
         </ClientOverviewContainer>
       </MainContainer>
@@ -70,4 +41,11 @@ const MainPage = () => {
   )
 }
 
-export default MainPage
+export default connect(
+  (state: RootState) => ({
+    activeClient: state.clients.activeClient?.attributes,
+  }),
+  (dispatch) => ({
+    setActiveClient: (clientId: number) => dispatch(setActiveClient(clientId)),
+  }),
+)(MainPage)
