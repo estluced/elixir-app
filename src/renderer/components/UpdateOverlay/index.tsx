@@ -73,7 +73,7 @@ const UpdateOverlay = () => {
           </UpdateOverlaySpinner>
           <Grid container direction="column" gap="30px" justifyContent="center">
             <Typography variant="h4" fontWeight={700}>
-              Launcher updating...
+              Updating
             </Typography>
           </Grid>
         </UpdateOverlayContainer>

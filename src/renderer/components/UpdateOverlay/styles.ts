@@ -6,7 +6,7 @@ export const UpdateOverlayBackdrop = styled(Box)(() => ({
   left: 0,
   width: '100%',
   height: '100%',
-  backdropFilter: 'blur(5px)',
+  backdropFilter: 'blur(10px)',
   backgroundColor: 'rgba(0, 0, 0, 0.8)',
   zIndex: 999999,
   transition: 'all 0.3s',
