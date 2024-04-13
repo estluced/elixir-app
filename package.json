@@ -1,7 +1,7 @@
 {
   "name": "elixir-app",
   "productName": "Elixir Launcher",
-  "version": "1.0.0-beta.15",
+  "version": "1.0.0-beta.20",
   "description": "My Electron application description",
   "main": ".webpack/main",
   "scripts": {
@@ -16,8 +16,8 @@
   },
   "keywords": [],
   "author": {
-    "name": "Serhii Mykolenko",
-    "email": "estluced@gmail.com"
+    "name": "Elixir",
+    "email": "elixir@gmail.com"
   },
   "repository": {
     "type": "git",

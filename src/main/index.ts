@@ -14,6 +14,8 @@ if (require('electron-squirrel-startup')) {
 
 CoreEvents()
 
+console.log('Updating test')
+
 ipcMain.on('check-for-updates', async (event, { shouldInform = true }) => {
   updateElectronApp({
     logger: {
