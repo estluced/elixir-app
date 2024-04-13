@@ -1,7 +1,7 @@
 {
   "name": "elixir-app",
   "productName": "Elixir Launcher",
-  "version": "1.0.0-beta.12",
+  "version": "1.0.0-beta.15",
   "description": "My Electron application description",
   "main": ".webpack/main",
   "scripts": {
@@ -40,7 +40,6 @@
     "electron-router-dom": "^1.0.5",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.1.0",
-    "electron-updater": "^6.1.8",
     "framer-motion": "^10.16.4",
     "lodash": "^4.17.21",
     "marked": "^11.1.0",
@@ -52,7 +51,8 @@
     "react-toastify": "^10.0.4",
     "swiper": "^10.3.1",
     "undici": "^5.25.4",
-    "unzipper": "^0.10.14"
+    "unzipper": "^0.10.14",
+    "update-electron-app": "^3.0.0"
   },
   "devDependencies": {
     "@electron-forge/cli": "^6.4.2",

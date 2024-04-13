@@ -9,17 +9,14 @@ import usePreload from '../../hooks/usePreload'
 
 const UpdateOverlay = () => {
   const { bridge } = usePreload()
-  const [updateProgress, setUpdateProgress] = useState({
-    total: 0,
-    transferred: 0,
-  })
+  const [updateInProgress, setUpdateInProgress] = useState(false)
 
   useEffect(() => {
-    bridge.on('core/app-update-progress', setUpdateProgress)
+    bridge.on('core/app-update-in-progress', () => setUpdateInProgress(true))
   }, [])
 
   return (
-    updateProgress.total > 0 && (
+    updateInProgress && (
       <>
         <UpdateOverlayBackdrop />
         <UpdateOverlayContainer>
@@ -76,10 +73,7 @@ const UpdateOverlay = () => {
           </UpdateOverlaySpinner>
           <Grid container direction="column" gap="30px" justifyContent="center">
             <Typography variant="h4" fontWeight={700}>
-              Updating
-            </Typography>
-            <Typography variant="h5" fontWeight={700}>
-              {updateProgress.transferred} / {updateProgress.total}
+              Launcher updating...
             </Typography>
           </Grid>
         </UpdateOverlayContainer>

@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
-import { autoUpdater } from 'electron-updater'
+import { updateElectronApp } from 'update-electron-app'
 import CoreEvents from './events/core'
 import HelpersEvents from './events/helpers'
 import LauncherStore from './utils/store'
@@ -12,74 +12,33 @@ if (require('electron-squirrel-startup')) {
   app.quit()
 }
 
-autoUpdater.setFeedURL({
-  provider: 'github',
-  owner: 'estluced',
-  repo: 'elixir-app',
-})
-
 CoreEvents()
 
 ipcMain.on('check-for-updates', async (event, { shouldInform = true }) => {
-  autoUpdater.checkForUpdates()
+  updateElectronApp({
+    logger: {
+      log: (msg) => {
+        if (msg.includes('update-not-available')) {
+          if (shouldInform)
+            event.reply('core/info', {
+              message: 'Update not available',
+            })
+        }
 
-  event.reply('core/info', {
-    message: 'Test info',
-  })
+        if (msg.includes('update-available')) {
+          event.reply('core/app-update-in-progress')
+        }
 
-  event.reply('core/error', {
-    message: 'Test error',
-  })
-
-  event.reply('core/warning', {
-    message: 'Test warning',
-  })
-
-  event.reply('core/success', {
-    message: 'Test success',
-  })
-
-  autoUpdater.autoDownload = false
-
-  autoUpdater.on('update-available', () => {
-    if (shouldInform)
-      event.reply('core/info', {
-        message: 'Update available',
-      })
-
-    autoUpdater
-      .downloadUpdate()
-      .then(() => {
-        autoUpdater.quitAndInstall()
-      })
-      .catch(() =>
-        event.reply('core/error', {
-          message: 'Error downloading update',
-        }),
-      )
-
-    autoUpdater.on('download-progress', (progressObj) => {
-      event.reply('core/app-update-progress', progressObj)
-    })
-
-    autoUpdater.on('error', (err) => {
-      event.reply('core/error', {
-        message: `Error in auto-updater. ${err}`,
-      })
-    })
-  })
-
-  if (shouldInform)
-    autoUpdater.on('update-not-available', () => {
-      event.reply('core/info', {
-        message: 'Update not available',
-      })
-    })
-
-  autoUpdater.on('error', (err) => {
-    event.reply('core/error', {
-      message: `Error in auto-updater. ${err}`,
-    })
+        if (msg.includes('error')) {
+          event.reply('core/error', {
+            message: `Error in auto-updater. ${msg}`,
+          })
+        }
+      },
+      warn: console.warn,
+      info: console.info,
+      error: console.error,
+    },
   })
 })
 
