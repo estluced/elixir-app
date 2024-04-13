@@ -7,7 +7,6 @@ import { Box, CssBaseline, ThemeProvider } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { Provider as ReduxProvider } from 'react-redux'
 import { toast, ToastContainer } from 'react-toastify'
-import Header from './components/Header'
 import theme from './theme'
 import SelectFolderModal from './modals/SelectFolder'
 import { DownloadCenterProvider } from './providers/DownloadCenter'
@@ -15,7 +14,7 @@ import { store as reduxRtkStore } from './store'
 import Pages from './pages'
 import { AppContainer } from './styles'
 import usePreload from './hooks/usePreload'
-import SettingsModal from './modals/Settings'
+import UpdateOverlay from './components/UpdateOverlay'
 
 export default function App() {
   const { localStore, bridge } = usePreload()
@@ -24,8 +23,24 @@ export default function App() {
   const path = localStore.get('installation-path')
 
   useEffect(() => {
-    bridge.on('core/error', ({ error }) => {
-      toast.error(error.message || error || 'An error occurred')
+    bridge.sendMessage('check-for-updates', {
+      shouldInform: false,
+    })
+
+    bridge.on('core/error', ({ message }) => {
+      toast.error(message.message || message || 'An error occurred')
+    })
+
+    bridge.on('core/info', ({ message }) => {
+      toast.info(message)
+    })
+
+    bridge.on('core/warn', ({ message }) => {
+      toast.warn(message)
+    })
+
+    bridge.on('core/success', ({ message }) => {
+      toast.success(message)
     })
   }, [])
 
@@ -36,6 +51,7 @@ export default function App() {
   return (
     <ReduxProvider store={reduxRtkStore}>
       <ThemeProvider theme={theme}>
+        <UpdateOverlay />
         <DownloadCenterProvider>
           <AppContainer>
             <CssBaseline />
@@ -62,11 +78,3 @@ export default function App() {
     </ReduxProvider>
   )
 }
-
-// <Routes>
-//   {path?.length ? (
-//     <Route path="/" element={<ProductScreen />} />
-//   ) : (
-//     <Route path="/" element={<SetupScreen />} />
-//   )}
-// </Routes>

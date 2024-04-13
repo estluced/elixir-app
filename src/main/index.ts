@@ -1,5 +1,5 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
-import { updateElectronApp } from 'update-electron-app'
+import { app, BrowserWindow, ipcMain, ipcRenderer } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import CoreEvents from './events/core'
 import HelpersEvents from './events/helpers'
 import LauncherStore from './utils/store'
@@ -8,23 +8,59 @@ import initPaths from './utils/initPaths'
 
 const store = LauncherStore.getInstance()
 
-updateElectronApp({
-  updateInterval: '1 hour',
-  logger: console,
-})
-
 if (require('electron-squirrel-startup')) {
   app.quit()
 }
 
 CoreEvents()
 
-ipcMain.on('check-for-updates', async (event) => {
-  updateElectronApp({
-    logger: console,
-    notifyUser: true,
+ipcMain.on('check-for-updates', async (event, { shouldInform = true }) => {
+  await autoUpdater.checkForUpdates()
+
+  autoUpdater.autoDownload = false
+
+  autoUpdater.on('update-available', () => {
+    if (shouldInform)
+      event.reply('core/info', {
+        message: 'Update available',
+      })
+
+    autoUpdater
+      .downloadUpdate()
+      .then(() => {
+        autoUpdater.quitAndInstall()
+      })
+      .catch(() =>
+        event.reply('core/error', {
+          message: 'Error downloading update',
+        }),
+      )
+
+    autoUpdater.on('download-progress', (progressObj) => {
+      event.reply('core/app-update-progress', progressObj)
+    })
+
+    autoUpdater.on('error', (err) => {
+      event.reply('core/error', {
+        message: `Error in auto-updater. ${err}`,
+      })
+    })
+  })
+
+  if (shouldInform)
+    autoUpdater.on('update-not-available', () => {
+      event.reply('core/info', {
+        message: 'Update not available',
+      })
+    })
+
+  autoUpdater.on('error', (err) => {
+    event.reply('core/error', {
+      message: `Error in auto-updater. ${err}`,
+    })
   })
 })
+
 ipcMain.on('electron-store-get', async (event, val) => {
   event.returnValue = store.get(val)
 })

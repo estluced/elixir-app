@@ -23,7 +23,7 @@ const LauncherSettings = () => {
   }
 
   const checkForUpdates = () => {
-    bridge.sendMessage('check-for-updates')
+    bridge.sendMessage('check-for-updates', { shouldInform: true })
     dispatch(toggleSettingsModal())
   }
 
