@@ -27,15 +27,12 @@ const getClientStatus = async (client: Client) => {
         JSON.parse(localArtifacts),
       ).flat()
       const remoteArtifactsFlatted = Object.values(remoteArtifacts).flat()
-      console.log(!isEqual(localArtifactsFlatted, remoteArtifactsFlatted))
       if (!isEqual(remoteArtifactsFlatted, localArtifactsFlatted)) {
         return ClientStatusEnum.OUTDATED
       }
     } else {
-      console.log('not installed')
       return ClientStatusEnum.NOT_INSTALLED
     }
-    console.log('installed')
     return ClientStatusEnum.INSTALLED
   } catch (error) {
     console.error(error)

@@ -70,8 +70,6 @@ const ClientOverview = ({
   useEffect(() => {
     initBridgeEvents()
 
-    console.log(location)
-
     return () => {
       // setClientStatus(ClientStatusEnum.INSTALLED)
     }

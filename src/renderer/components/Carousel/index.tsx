@@ -179,9 +179,6 @@ function Carousel({
       >
         {React.Children.map(children, (child) => (
           <SwiperSlide
-            onResize={() => {
-              console.log('a')
-            }}
             style={{
               boxSizing: 'border-box',
               ...(vertical

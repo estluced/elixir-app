@@ -22,12 +22,17 @@ const LauncherSettings = () => {
     toast('Cache cleared', { type: 'success' })
   }
 
+  const checkForUpdates = () => {
+    bridge.sendMessage('check-for-updates')
+    dispatch(toggleSettingsModal())
+  }
+
   return (
     <Grid container direction="column" gap="10px">
       <Button variant="contained" fullWidth onClick={handleClearCache}>
         Clear cache
       </Button>
-      <Button variant="contained" fullWidth>
+      <Button variant="contained" fullWidth onClick={checkForUpdates}>
         Check for updates
       </Button>
       <Button
