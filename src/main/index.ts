@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, ipcRenderer } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import CoreEvents from './events/core'
 import HelpersEvents from './events/helpers'
@@ -11,6 +11,12 @@ const store = LauncherStore.getInstance()
 if (require('electron-squirrel-startup')) {
   app.quit()
 }
+
+autoUpdater.setFeedURL({
+  provider: 'github',
+  owner: 'estluced',
+  repo: 'elixir-app',
+})
 
 CoreEvents()
 
