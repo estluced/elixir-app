@@ -1,7 +1,7 @@
 {
   "name": "elixir-app",
-  "productName": "elixir-app",
-  "version": "1.0.0",
+  "productName": "Elixir Launcher",
+  "version": "1.0.0-beta",
   "description": "My Electron application description",
   "main": ".webpack/main",
   "scripts": {
@@ -11,13 +11,21 @@
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },
+  "config": {
+    "forge": "./forge.config.ts"
+  },
   "keywords": [],
   "author": {
     "name": "Serhii Mykolenko",
     "email": "estluced@gmail.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/estluced/elixir-app.git"
+  },
   "license": "MIT",
   "dependencies": {
+    "@electron-forge/publisher-github": "^7.4.0",
     "@electron/remote": "^2.0.11",
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
@@ -43,7 +51,8 @@
     "react-toastify": "^10.0.4",
     "swiper": "^10.3.1",
     "undici": "^5.25.4",
-    "unzipper": "^0.10.14"
+    "unzipper": "^0.10.14",
+    "update-electron-app": "^3.0.0"
   },
   "devDependencies": {
     "@electron-forge/cli": "^6.4.2",

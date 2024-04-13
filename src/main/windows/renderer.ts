@@ -1,4 +1,5 @@
 import { app, BrowserWindow } from 'electron'
+import { join } from 'path'
 import createPreloaderWindow from './preloader'
 
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
@@ -15,6 +16,7 @@ const createRendererWindow = async () => {
     height: 624,
     backgroundColor: '#111',
     show: false,
+    icon: join(process.cwd(), 'public', 'icon', 'icon.ico'),
     ...(isPackaged ? { titleBarStyle: 'hidden', resizable: false } : {}),
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,

@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
+import { updateElectronApp } from 'update-electron-app'
 import CoreEvents from './events/core'
 import HelpersEvents from './events/helpers'
 import LauncherStore from './utils/store'
@@ -7,12 +8,23 @@ import initPaths from './utils/initPaths'
 
 const store = LauncherStore.getInstance()
 
+updateElectronApp({
+  updateInterval: '1 hour',
+  logger: console,
+})
+
 if (require('electron-squirrel-startup')) {
   app.quit()
 }
 
 CoreEvents()
 
+ipcMain.on('check-for-updates', async (event) => {
+  updateElectronApp({
+    logger: console,
+    notifyUser: true,
+  })
+})
 ipcMain.on('electron-store-get', async (event, val) => {
   event.returnValue = store.get(val)
 })

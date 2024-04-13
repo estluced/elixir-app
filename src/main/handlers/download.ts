@@ -39,16 +39,18 @@ const downloadHandler = async (event: IpcMainEvent, client: Client) => {
 
     const clientMetadata: FilesMetadata = await request(
       client.metadataUrl,
+      null,
+      null,
+      false,
     ).then((res) => res.json())
 
     const installationPath = String(store.get('installation-path'))
     const installPath = join(installationPath, client.uuid)
 
-    const localMetadataPath = join(installPath, 'version-metadata.json')
+    const localMetadataPath = join(installPath, 'artifacts.json')
 
     const files = Object.values(clientMetadata)
       .flat()
-      .sort((a) => (a.name === 'version-hash' ? 1 : -1))
       .map((downloadFile: DownloadFile) => {
         const path = join(installPath, downloadFile.path)
 
@@ -83,7 +85,6 @@ const downloadHandler = async (event: IpcMainEvent, client: Client) => {
 
       const localFiles = Object.values(localMetadata)
         .flat()
-        .sort((a) => (a.name === 'version-hash' ? 1 : -1))
         .map((downloadFile) => ({
           ...downloadFile,
           path: join(installPath, downloadFile.path),

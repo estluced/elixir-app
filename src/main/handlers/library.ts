@@ -13,21 +13,32 @@ const getClientStatus = async (client: Client) => {
     const store = LauncherStore.getInstance()
     const installationPath = String(store.get('installation-path'))
     const clientPath = path.join(installationPath, client.uuid)
-    const versionHashPath = path.join(clientPath, 'version-hash')
-    const exists = fs.existsSync(versionHashPath)
+    const artifactsPath = path.join(clientPath, 'artifacts.json')
+    const exists = fs.existsSync(artifactsPath)
     if (exists) {
-      const remoteVersionHash = await strapiRequest(client.versionHashUrl).then(
-        (res) => res.text(),
-      )
-      const localVersionHash = fs.readFileSync(versionHashPath, 'utf-8')
-      if (remoteVersionHash !== localVersionHash) {
+      const remoteArtifacts = await strapiRequest(
+        client.metadataUrl,
+        null,
+        null,
+        false,
+      ).then((res) => res.json())
+      const localArtifacts = fs.readFileSync(artifactsPath, 'utf-8')
+      const localArtifactsFlatted = Object.values(
+        JSON.parse(localArtifacts),
+      ).flat()
+      const remoteArtifactsFlatted = Object.values(remoteArtifacts).flat()
+      console.log(!isEqual(localArtifactsFlatted, remoteArtifactsFlatted))
+      if (!isEqual(remoteArtifactsFlatted, localArtifactsFlatted)) {
         return ClientStatusEnum.OUTDATED
       }
     } else {
+      console.log('not installed')
       return ClientStatusEnum.NOT_INSTALLED
     }
+    console.log('installed')
     return ClientStatusEnum.INSTALLED
   } catch (error) {
+    console.error(error)
     return ClientStatusEnum.ERROR
   }
 }

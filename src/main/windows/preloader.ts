@@ -1,4 +1,5 @@
 import { BrowserWindow } from 'electron'
+import { join } from 'path'
 
 declare const PRELOADER_WINDOW_WEBPACK_ENTRY: string
 
@@ -9,6 +10,7 @@ const createPreloaderWindow = async () => {
     resizable: false,
     backgroundColor: '#111',
     show: true,
+    icon: join(process.cwd(), 'public', 'icon', 'icon.ico'),
     webPreferences: {
       webSecurity: true,
     },
