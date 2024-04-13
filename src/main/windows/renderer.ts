@@ -35,9 +35,12 @@ const createRendererWindow = async () => {
     if (!mainWindow) {
       throw new Error('"mainWindow" is not defined')
     }
+
     if (isPackaged) {
-      preloaderWindow.close()
-      mainWindow.show()
+      setTimeout(() => {
+        preloaderWindow.close()
+        mainWindow.show()
+      }, 3000)
     } else {
       preloaderWindow.close()
       mainWindow.show()
