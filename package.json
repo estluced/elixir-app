@@ -1,7 +1,7 @@
 {
   "name": "elixir-app",
   "productName": "Elixir Launcher",
-  "version": "1.0.1",
+  "version": "1.0.5",
   "description": "Elixir Launcher",
   "main": ".webpack/main",
   "scripts": {
@@ -25,6 +25,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@electron-forge/publisher-electron-release-server": "^7.4.0",
     "@electron-forge/publisher-github": "^7.4.0",
     "@electron/remote": "^2.0.11",
     "@emotion/react": "^11.10.6",

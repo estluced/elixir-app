@@ -6,6 +6,7 @@ import { join, resolve } from 'path'
 
 import { mainConfig } from './webpack.main.config'
 import { rendererConfig } from './webpack.renderer.config'
+import getConfig from './src/utils/getConfig'
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -56,13 +57,11 @@ const config: ForgeConfig = {
   ],
   publishers: [
     {
-      name: '@electron-forge/publisher-github',
+      name: '@electron-forge/publisher-electron-release-server',
       config: {
-        repository: {
-          owner: 'estluced',
-          name: 'elixir-app',
-        },
-        prerelease: true,
+        baseUrl: process.env.RELEASE_SERVER_URL,
+        username: process.env.RELEASE_SERVER_USER,
+        password: process.env.RELEASE_SERVER_PASSWORD,
       },
     },
   ],

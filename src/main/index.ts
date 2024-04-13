@@ -1,11 +1,12 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
-import { updateElectronApp } from 'update-electron-app'
+import { app, BrowserWindow, ipcMain, autoUpdater } from 'electron'
 import CoreEvents from './events/core'
 import HelpersEvents from './events/helpers'
 import LauncherStore from './utils/store'
 import createRendererWindow from './windows/renderer'
 import initPaths from './utils/initPaths'
+import getConfig from '../utils/getConfig'
 
+const config = getConfig()
 const store = LauncherStore.getInstance()
 
 if (require('electron-squirrel-startup')) {
@@ -14,33 +15,40 @@ if (require('electron-squirrel-startup')) {
 
 CoreEvents()
 
-console.log('Updating test')
-
 ipcMain.on('check-for-updates', async (event, { shouldInform = true }) => {
-  updateElectronApp({
-    logger: {
-      log: (msg) => {
-        if (msg.includes('update-not-available')) {
-          if (shouldInform)
-            event.reply('core/info', {
-              message: 'Update not available',
-            })
-        }
+  autoUpdater.setFeedURL({
+    url: `${config.RELEASE_SERVER}/update/${process.platform}${
+      process.arch
+    }/${app.getVersion()}/stable`,
+  })
 
-        if (msg.includes('update-available')) {
-          event.reply('core/app-update-in-progress')
-        }
+  try {
+    autoUpdater.checkForUpdates()
+  } catch (err) {
+    event.reply('core/error', {
+      message: `Error in auto-updater. ${err}`,
+    })
+  }
 
-        if (msg.includes('error')) {
-          event.reply('core/error', {
-            message: `Error in auto-updater. ${msg}`,
-          })
-        }
-      },
-      warn: console.warn,
-      info: console.info,
-      error: console.error,
-    },
+  autoUpdater.on('update-available', () => {
+    event.reply('core/app-update-in-progress')
+  })
+
+  autoUpdater.on('update-downloaded', () => {
+    autoUpdater.quitAndInstall()
+  })
+
+  if (shouldInform)
+    autoUpdater.on('update-not-available', () => {
+      event.reply('core/info', {
+        message: 'No updates found',
+      })
+    })
+
+  autoUpdater.on('error', (err) => {
+    event.reply('core/error', {
+      message: `Error in auto-updater. ${err}`,
+    })
   })
 })
 
