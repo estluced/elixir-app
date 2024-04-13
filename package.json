@@ -1,7 +1,7 @@
 {
   "name": "elixir-app",
   "productName": "Elixir Launcher",
-  "version": "1.0.0-beta",
+  "version": "1.0.0-beta.2",
   "description": "My Electron application description",
   "main": ".webpack/main",
   "scripts": {
