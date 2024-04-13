@@ -15,7 +15,23 @@ if (require('electron-squirrel-startup')) {
 CoreEvents()
 
 ipcMain.on('check-for-updates', async (event, { shouldInform = true }) => {
-  await autoUpdater.checkForUpdates()
+  autoUpdater.checkForUpdates()
+
+  event.reply('core/info', {
+    message: 'Test info',
+  })
+
+  event.reply('core/error', {
+    message: 'Test error',
+  })
+
+  event.reply('core/warning', {
+    message: 'Test warning',
+  })
+
+  event.reply('core/success', {
+    message: 'Test success',
+  })
 
   autoUpdater.autoDownload = false
 
