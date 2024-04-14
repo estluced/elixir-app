@@ -17,8 +17,10 @@ import { StrapiMedia } from '../../types/strapi'
 import getConfig from '../../utils/getConfig'
 import { Client } from '../../types/client'
 import { Account } from '../../types/account'
+import initPaths from '../utils/initPaths'
 
-const DEFAULT_PATH = `${homedir()}\\Elixir`
+const LAUNCHER_DIRNAME = 'Elixir'
+const DEFAULT_PATH = join(homedir(), LAUNCHER_DIRNAME)
 
 const getDefaultInstallationPath = async (
   event: IpcMainEvent,
@@ -61,6 +63,7 @@ const setInstallationPath = (
   try {
     const store = LauncherStore.getInstance()
     store.set('installation-path', installationPathInfo.path)
+    initPaths(installationPathInfo.path)
     event.reply('helpers/set-installation-path', true)
   } catch (error) {
     event.reply('helpers/set-installation-path', false)
@@ -76,9 +79,10 @@ const selectFolderHandler = async (
   })
   if (!result.canceled) {
     const diskSpace = await checkDiskSpace(result.filePaths[0])
+    const installPath = join(result.filePaths[0], LAUNCHER_DIRNAME)
     event.reply('helpers/select-folder', {
       ...diskSpace,
-      path: result.filePaths[0],
+      path: installPath,
     })
   }
 }
@@ -125,6 +129,40 @@ const storeImage = async (event: IpcMainEvent, image: StrapiMedia) => {
   }
 }
 
+const syncSkinInfoWithClients = () => {
+  const store = LauncherStore.getInstance()
+  const installationPath = String(store.get('installation-path'))
+  const userDataPath = join(installationPath, 'user-data')
+
+  const skinsDir = join(userDataPath, 'skins')
+  const capeDir = join(userDataPath, 'capes')
+
+  readdirSync(installationPath).forEach((client) => {
+    const customSkinLoaderPath = join(
+      installationPath,
+      client,
+      'CustomSkinLoader',
+    )
+
+    if (!existsSync(customSkinLoaderPath)) return
+
+    const localSkinPath = join(customSkinLoaderPath, 'LocalSkin')
+
+    if (!existsSync(localSkinPath)) mkdirSync(localSkinPath)
+
+    const clientSkinsPath = join(localSkinPath, 'skins')
+    const clientCapesPath = join(localSkinPath, 'capes')
+
+    if (existsSync(clientSkinsPath))
+      rmdirSync(clientSkinsPath, { recursive: true })
+    if (existsSync(clientCapesPath))
+      rmdirSync(clientCapesPath, { recursive: true })
+
+    symlinkSync(skinsDir, clientSkinsPath, 'junction')
+    symlinkSync(capeDir, clientCapesPath, 'junction')
+  })
+}
+
 const saveSkinInfo = async (
   event: IpcMainEvent,
   skinInfo: {
@@ -143,33 +181,6 @@ const saveSkinInfo = async (
 
     const skinsDir = join(userDataPath, 'skins')
     const capeDir = join(userDataPath, 'capes')
-
-    const updateSymlinks = () => {
-      readdirSync(installationPath).forEach((client) => {
-        const customSkinLoaderPath = join(
-          installationPath,
-          client,
-          'CustomSkinLoader',
-        )
-
-        if (!existsSync(customSkinLoaderPath)) return
-
-        const localSkinPath = join(customSkinLoaderPath, 'LocalSkin')
-
-        if (!existsSync(localSkinPath)) mkdirSync(localSkinPath)
-
-        const clientSkinsPath = join(localSkinPath, 'skins')
-        const clientCapesPath = join(localSkinPath, 'capes')
-
-        if (existsSync(clientSkinsPath))
-          rmdirSync(clientSkinsPath, { recursive: true })
-        if (existsSync(clientCapesPath))
-          rmdirSync(clientCapesPath, { recursive: true })
-
-        symlinkSync(skinsDir, clientSkinsPath, 'junction')
-        symlinkSync(capeDir, clientCapesPath, 'junction')
-      })
-    }
 
     if (!existsSync(skinsDir)) {
       mkdirSync(skinsDir, { recursive: true })
@@ -198,7 +209,7 @@ const saveSkinInfo = async (
       )
     }
 
-    updateSymlinks()
+    syncSkinInfoWithClients()
 
     event.reply(`helpers/account/skin/save`, {
       skin,
@@ -321,4 +332,5 @@ export {
   resetSkinInfo,
   getRAMRangeArray,
   clearCache,
+  syncSkinInfoWithClients,
 }

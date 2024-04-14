@@ -13,7 +13,7 @@ export const PickInstallationFolderField = styled(Box)(({ theme }) => ({
   '.MuiTypography-root': {
     fontWeight: 600,
     marginLeft: '8px',
-    maxWidth: '55%',
+    maxWidth: '40%',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',

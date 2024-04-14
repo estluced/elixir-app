@@ -2,9 +2,9 @@ import { join } from 'path'
 import { existsSync, mkdirSync } from 'fs'
 import LauncherStore from './store'
 
-const initPaths = () => {
+const initPaths = (installPath: string | null = null) => {
   const store = LauncherStore.getInstance()
-  const installationPath = String(store.get('installation-path'))
+  const installationPath = installPath || String(store.get('installation-path'))
 
   const userDataPath = join(installationPath, 'user-data')
 

@@ -6,28 +6,7 @@ import LauncherStore from '../utils/store'
 import request from '../../api/request'
 import { FilesMetadata } from '../../types/downloads'
 import { Client, ClientStatusEnum } from '../../types/client'
-
-const initSkinsSymlink = (destination: string) => {
-  const store = LauncherStore.getInstance()
-  const installationPath = String(store.get('installation-path'))
-  const userDataPath = join(installationPath, 'user-data')
-
-  const skinsDir = join(userDataPath, 'skins')
-
-  rmSync(destination, { recursive: true, force: true })
-  symlinkSync(skinsDir, destination, 'junction')
-}
-
-const initCapesSymlink = (destination: string) => {
-  const store = LauncherStore.getInstance()
-  const installationPath = String(store.get('installation-path'))
-  const userDataPath = join(installationPath, 'user-data')
-
-  const capesDir = join(userDataPath, 'capes')
-
-  rmSync(destination, { recursive: true, force: true })
-  symlinkSync(capesDir, destination, 'junction')
-}
+import { syncSkinInfoWithClients } from './helpers'
 
 const downloadHandler = async (event: IpcMainEvent, client: Client) => {
   const store = LauncherStore.getInstance()
@@ -53,24 +32,6 @@ const downloadHandler = async (event: IpcMainEvent, client: Client) => {
       .flat()
       .map((downloadFile: DownloadFile) => {
         const path = join(installPath, downloadFile.path)
-
-        if (downloadFile.path.includes('CustomSkinLoader/LocalSkin/skins')) {
-          return {
-            ...downloadFile,
-            path,
-            afterDirCreate: (destination: string) =>
-              initSkinsSymlink(destination),
-          }
-        }
-
-        if (downloadFile.path.includes('CustomSkinLoader/LocalSkin/capes')) {
-          return {
-            ...downloadFile,
-            path,
-            afterDirCreate: (destination: string) =>
-              initCapesSymlink(destination),
-          }
-        }
 
         return {
           ...downloadFile,
@@ -126,6 +87,7 @@ const downloadHandler = async (event: IpcMainEvent, client: Client) => {
     })
 
     downloader.on(`${client.uuid}:complete`, () => {
+      syncSkinInfoWithClients()
       event.reply(`core/download/${client.uuid}/complete`, {
         status: ClientStatusEnum.INSTALLED,
       })
