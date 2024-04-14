@@ -64,6 +64,10 @@ ipcMain.on('electron-store-clear', async () => {
   store.clear()
 })
 
+ipcMain.on('app/restart', () => {
+  app.relaunch()
+})
+
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()

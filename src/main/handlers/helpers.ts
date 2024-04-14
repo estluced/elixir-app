@@ -47,7 +47,7 @@ const getInstallationPath = () => {
   let installationPath = store.get('installation-path')
   if (!installationPath) {
     ipcMain.emit('client/open-installation-path-dialog')
-    ipcMain.on('client/set-installation-path', (event, path) => {
+    ipcMain.on('client/set-installation-path', (_, path) => {
       installationPath = path
     })
   }
@@ -79,7 +79,10 @@ const selectFolderHandler = async (
   })
   if (!result.canceled) {
     const diskSpace = await checkDiskSpace(result.filePaths[0])
-    const installPath = join(result.filePaths[0], LAUNCHER_DIRNAME)
+    const candidatePath = result.filePaths[0]
+    const installPath = candidatePath.includes(LAUNCHER_DIRNAME)
+      ? candidatePath
+      : join(result.filePaths[0], LAUNCHER_DIRNAME)
     event.reply('helpers/select-folder', {
       ...diskSpace,
       path: installPath,
@@ -87,14 +90,14 @@ const selectFolderHandler = async (
   }
 }
 
-const openClientFolder = async (event: IpcMainEvent, client: Client) => {
+const openClientFolder = async (_: IpcMainEvent, client: Client) => {
   const store = LauncherStore.getInstance()
   const installationPath = store.get('installation-path')
   const clientPath = join(String(installationPath), client.uuid)
   await shell.openPath(clientPath)
 }
 
-const storeImage = async (event: IpcMainEvent, image: StrapiMedia) => {
+const storeImage = async (_: IpcMainEvent, image: StrapiMedia) => {
   const config = getConfig()
   const imageUrl = `${config.API_URL_V2}${image.url}`
 
