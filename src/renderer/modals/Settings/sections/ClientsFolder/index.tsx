@@ -1,14 +1,11 @@
-import { toast } from 'react-toastify'
-import { useDispatch } from 'react-redux'
 import SelectFolder from '../../../../components/SelectFolder'
-import { toggleSettingsModal } from '../../../../store/app/modalsSlice'
+import usePreload from '../../../../hooks/usePreload'
 
 const ClientsFolder = () => {
-  const dispatch = useDispatch()
+  const { bridge } = usePreload()
 
   const onChangeLocation = () => {
-    toast('Clients location changed successfully', { type: 'success' })
-    dispatch(toggleSettingsModal())
+    bridge.sendMessage('app', ['reload'])
   }
 
   return (

@@ -59,7 +59,7 @@ const SelectFolder = ({
       .sendMessage('helpers/set-installation-path', installationFolder)
       .on((success) => {
         if (success && onFinish) {
-          bridge.sendMessage('app/restart')
+          onFinish()
         }
       })
   }

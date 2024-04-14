@@ -64,10 +64,6 @@ ipcMain.on('electron-store-clear', async () => {
   store.clear()
 })
 
-ipcMain.on('app/restart', () => {
-  app.relaunch()
-})
-
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
@@ -87,6 +83,11 @@ app.whenReady().then(async () => {
       case 'quit':
         app.quit()
         break
+      case 'reload': {
+        app.relaunch()
+        app.quit()
+        break
+      }
       default:
         break
     }
