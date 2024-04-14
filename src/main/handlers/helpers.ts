@@ -2,7 +2,15 @@ import { IpcMainEvent, dialog, BrowserWindow, ipcMain, shell } from 'electron'
 import { homedir, totalmem } from 'os'
 import checkDiskSpace from 'check-disk-space'
 import { request } from 'undici'
-import { existsSync, mkdirSync, unlinkSync, writeFileSync, rmdirSync } from 'fs'
+import {
+  existsSync,
+  mkdirSync,
+  unlinkSync,
+  writeFileSync,
+  rmdirSync,
+  readdirSync,
+  symlinkSync,
+} from 'fs'
 import { join } from 'path'
 import LauncherStore from '../utils/store'
 import { StrapiMedia } from '../../types/strapi'
@@ -136,6 +144,33 @@ const saveSkinInfo = async (
     const skinsDir = join(userDataPath, 'skins')
     const capeDir = join(userDataPath, 'capes')
 
+    const updateSymlinks = () => {
+      readdirSync(installationPath).forEach((client) => {
+        const customSkinLoaderPath = join(
+          installationPath,
+          client,
+          'CustomSkinLoader',
+        )
+
+        if (!existsSync(customSkinLoaderPath)) return
+
+        const localSkinPath = join(customSkinLoaderPath, 'LocalSkin')
+
+        if (!existsSync(localSkinPath)) mkdirSync(localSkinPath)
+
+        const clientSkinsPath = join(localSkinPath, 'skins')
+        const clientCapesPath = join(localSkinPath, 'capes')
+
+        if (existsSync(clientSkinsPath))
+          rmdirSync(clientSkinsPath, { recursive: true })
+        if (existsSync(clientCapesPath))
+          rmdirSync(clientCapesPath, { recursive: true })
+
+        symlinkSync(skinsDir, clientSkinsPath, 'junction')
+        symlinkSync(capeDir, clientCapesPath, 'junction')
+      })
+    }
+
     if (!existsSync(skinsDir)) {
       mkdirSync(skinsDir, { recursive: true })
     }
@@ -163,13 +198,15 @@ const saveSkinInfo = async (
       )
     }
 
+    updateSymlinks()
+
     event.reply(`helpers/account/skin/save`, {
       skin,
       cape,
     })
   } catch (error) {
     event.reply(`core/error`, {
-      error,
+      message: error?.message || error,
     })
   }
 }
