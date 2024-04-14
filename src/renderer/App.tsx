@@ -28,7 +28,7 @@ export default function App() {
     })
 
     bridge.on('core/error', ({ message }) => {
-      toast.error(message.message || message || 'An error occurred')
+      toast.error(message?.message || message || 'An error occurred')
     })
 
     bridge.on('core/info', ({ message }) => {

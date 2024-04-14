@@ -146,6 +146,7 @@ class Downloader extends EventEmitter {
         body.on('error', (err) => {
           writer.end()
           writer.close()
+          console.error(err)
           cb(err)
         })
 
@@ -161,9 +162,11 @@ class Downloader extends EventEmitter {
         writer.on('error', (err) => {
           writer.end()
           writer.close()
+          console.error(err)
           cb(err)
         })
       } else {
+        console.error(new Error(`${statusCode} - ${url}`))
         cb(new Error(`${statusCode} - ${url}`))
       }
     } catch (e) {
@@ -175,6 +178,7 @@ class Downloader extends EventEmitter {
           unlinkSync(path)
         }
       } catch (err) {
+        console.error(err)
         this.emitEvent('error', e)
       }
       this.queue.kill()

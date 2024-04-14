@@ -161,8 +161,9 @@ const downloadHandler = async (event: IpcMainEvent, client: Client) => {
       promises.rmdir(installPath, { recursive: true })
     })
   } catch (error) {
+    console.error(error)
     event.reply(`core/error`, {
-      error,
+      message: error?.message || error,
     })
     event.reply(`core/download/${client.uuid}/complete`, {
       status: ClientStatusEnum.NOT_INSTALLED,

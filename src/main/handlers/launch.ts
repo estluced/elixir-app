@@ -146,8 +146,9 @@ const launchHandler = async (event: IpcMainEvent, client: Client) => {
       },
     })
   } catch (error) {
+    console.error(error)
     event.reply(`core/error`, {
-      error,
+      message: error?.message || error,
     })
   }
 }

@@ -3,7 +3,6 @@ import { PlayCircle, FolderOpen } from '@mui/icons-material'
 import marked from 'marked'
 import { useEffect } from 'react'
 import { connect, useDispatch } from 'react-redux'
-import { useLocation } from 'react-router-dom'
 import { Client, ClientStatus, ClientStatusEnum } from '../../../types/client'
 import { ClientOverviewContainer, PlayButton } from './styles'
 import { Carousel } from '../Carousel'
@@ -33,7 +32,6 @@ const ClientOverview = ({
   } = client
 
   const dispatch = useDispatch()
-  const location = useLocation()
   const { bridge } = usePreload()
   const parsedDescription = marked.parse(description)
   const { addDownload } = useDownloadCenter()
@@ -86,7 +84,7 @@ const ClientOverview = ({
 
   return (
     <ClientOverviewContainer>
-      <Grid container direction="row" gap="10px">
+      <Grid container direction="column" gap="10px">
         <Typography variant="h2" fontWeight={700}>
           {title}
         </Typography>
