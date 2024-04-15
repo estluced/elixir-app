@@ -8,6 +8,7 @@ import { toast } from 'react-toastify'
 import DefaultSkin from '../../assets/default-skin.png'
 import DefaultCape from '../../assets/default-cape.png'
 import usePreload from '../../hooks/usePreload'
+import { clearSkinData, uploadSkinData } from '../../../api/uploadSkin'
 
 const UploadButton = ({
   type,
@@ -48,7 +49,7 @@ interface SkinEditorProps {
 }
 
 const SkinEditor = ({ width = 200 }: SkinEditorProps) => {
-  const { bridge } = usePreload()
+  const { bridge, account } = usePreload()
 
   const [currentSkin, setCurrentSkin] = useState<string | undefined>(
     DefaultSkin,
@@ -61,8 +62,8 @@ const SkinEditor = ({ width = 200 }: SkinEditorProps) => {
   const [skinUrl, setSkinUrl] = useState<string | undefined>(DefaultSkin)
   const [capeUrl, setCapeUrl] = useState<string | undefined>(DefaultCape)
 
-  const [skinFile, setSkinFile] = useState<string | undefined>(undefined)
-  const [capeFile, setCapeFile] = useState<string | undefined>(undefined)
+  const [skinFile, setSkinFile] = useState<File | undefined>(undefined)
+  const [capeFile, setCapeFile] = useState<File | undefined>(undefined)
 
   const [editMenuAnchorEl, setEditMenuAnchorEl] = useState<null | HTMLElement>(
     null,
@@ -84,12 +85,12 @@ const SkinEditor = ({ width = 200 }: SkinEditorProps) => {
       .on(
         (skinInfo: { skin: string | undefined; cape: string | undefined }) => {
           if (skinInfo.skin?.length) {
-            setSkinUrl(`file:///${skinInfo.skin}`)
-            setCurrentSkin(`file:///${skinInfo.skin}`)
+            setSkinUrl(skinInfo.skin)
+            setCurrentSkin(skinInfo.skin)
           }
           if (skinInfo.cape?.length) {
-            setCapeUrl(`file:///${skinInfo.cape}`)
-            setCurrentCape(`file:///${skinInfo.cape}`)
+            setCapeUrl(skinInfo.cape)
+            setCurrentCape(skinInfo.cape)
           }
         },
       )
@@ -99,9 +100,7 @@ const SkinEditor = ({ width = 200 }: SkinEditorProps) => {
     const file = e.target.files?.[0]
     if (file) {
       setSkinUrl(URL.createObjectURL(file))
-      toBase64(file).then((base64) => {
-        setSkinFile(base64 as string)
-      })
+      setSkinFile(file)
     }
     handleCloseEditMenu()
   }
@@ -109,41 +108,45 @@ const SkinEditor = ({ width = 200 }: SkinEditorProps) => {
   const onChangeCape = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      console.log(file)
       setCapeUrl(URL.createObjectURL(file))
-      toBase64(file).then((base64) => {
-        setCapeFile(base64 as string)
-      })
+      setCapeFile(file)
     }
     handleCloseEditMenu()
   }
 
   const onReset = () => {
-    setSkinUrl(DefaultSkin)
-    setCapeUrl(DefaultCape)
-    setSkinFile(undefined)
-    setCapeFile(undefined)
+    clearSkinData(account.username)
+      .then(() => {
+        setCurrentSkin(DefaultSkin)
+        setCurrentCape(DefaultCape)
+      })
+      .then(() => {
+        setSkinUrl(DefaultSkin)
+        setCapeUrl(DefaultCape)
+        setSkinFile(undefined)
+        setCapeFile(undefined)
+        toast('Skin cleared successfully', { type: 'success' })
+      })
+      .catch(() => {
+        toast('Failed to clear skin', { type: 'error' })
+      })
   }
 
   const onSave = () => {
-    if (skinUrl === DefaultSkin && capeUrl === DefaultCape) {
-      bridge.sendMessage('helpers/account/skin/reset', {
-        skin: skinFile,
-        cape: capeFile,
+    console.log(capeFile)
+    uploadSkinData(account.username, {
+      skin: skinFile,
+      cape: capeFile,
+    })
+      .then(() => {
+        setCurrentSkin(skinUrl)
+        setCurrentCape(capeUrl)
+        toast('Skin saved successfully', { type: 'success' })
       })
-      setCurrentSkin(DefaultSkin)
-      setCurrentCape(DefaultCape)
-    } else {
-      bridge
-        .sendMessage('helpers/account/skin/save', {
-          skin: skinFile,
-          cape: capeFile,
-        })
-        .on(() => {
-          setCurrentSkin(skinUrl)
-          setCurrentCape(capeUrl)
-        })
-    }
-    toast('Skin saved successfully', { type: 'success' })
+      .catch(() => {
+        toast('Failed to save skin', { type: 'error' })
+      })
   }
 
   return (

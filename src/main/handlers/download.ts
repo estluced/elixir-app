@@ -1,12 +1,11 @@
 import { ipcMain, IpcMainEvent } from 'electron'
 import { join } from 'path'
-import { existsSync, promises, readFileSync, symlinkSync, rmSync } from 'fs'
+import { existsSync, promises, readFileSync, rmSync } from 'fs'
 import Downloader, { DownloadFile } from '../utils/downloader'
 import LauncherStore from '../utils/store'
 import request from '../../api/request'
 import { FilesMetadata } from '../../types/downloads'
 import { Client, ClientStatusEnum } from '../../types/client'
-import { syncSkinInfoWithClients } from './helpers'
 
 const downloadHandler = async (event: IpcMainEvent, client: Client) => {
   const store = LauncherStore.getInstance()
@@ -87,7 +86,6 @@ const downloadHandler = async (event: IpcMainEvent, client: Client) => {
     })
 
     downloader.on(`${client.uuid}:complete`, () => {
-      syncSkinInfoWithClients()
       event.reply(`core/download/${client.uuid}/complete`, {
         status: ClientStatusEnum.INSTALLED,
       })

@@ -5,7 +5,6 @@ import { request } from 'undici'
 import {
   existsSync,
   mkdirSync,
-  unlinkSync,
   writeFileSync,
   rmdirSync,
   readdirSync,
@@ -132,150 +131,16 @@ const storeImage = async (_: IpcMainEvent, image: StrapiMedia) => {
   }
 }
 
-const syncSkinInfoWithClients = () => {
-  const store = LauncherStore.getInstance()
-  const installationPath = String(store.get('installation-path'))
-  const userDataPath = join(installationPath, 'user-data')
-
-  const skinsDir = join(userDataPath, 'skins')
-  const capeDir = join(userDataPath, 'capes')
-
-  readdirSync(installationPath).forEach((client) => {
-    const customSkinLoaderPath = join(
-      installationPath,
-      client,
-      'CustomSkinLoader',
-    )
-
-    if (!existsSync(customSkinLoaderPath)) return
-
-    const localSkinPath = join(customSkinLoaderPath, 'LocalSkin')
-
-    if (!existsSync(localSkinPath)) mkdirSync(localSkinPath)
-
-    const clientSkinsPath = join(localSkinPath, 'skins')
-    const clientCapesPath = join(localSkinPath, 'capes')
-
-    if (existsSync(clientSkinsPath))
-      rmdirSync(clientSkinsPath, { recursive: true })
-    if (existsSync(clientCapesPath))
-      rmdirSync(clientCapesPath, { recursive: true })
-
-    symlinkSync(skinsDir, clientSkinsPath, 'junction')
-    symlinkSync(capeDir, clientCapesPath, 'junction')
-  })
-}
-
-const saveSkinInfo = async (
-  event: IpcMainEvent,
-  skinInfo: {
-    skin: string
-    cape: string
-  },
-) => {
-  try {
-    const store = LauncherStore.getInstance()
-    const { skin, cape } = skinInfo
-    const { username } = JSON.parse(
-      (store.get('account') as string) || '{}',
-    ) as Account
-    const installationPath = String(store.get('installation-path'))
-    const userDataPath = join(installationPath, 'user-data')
-
-    const skinsDir = join(userDataPath, 'skins')
-    const capeDir = join(userDataPath, 'capes')
-
-    if (!existsSync(skinsDir)) {
-      mkdirSync(skinsDir, { recursive: true })
-    }
-
-    if (!existsSync(capeDir)) {
-      mkdirSync(capeDir, { recursive: true })
-    }
-
-    const skinPath = join(skinsDir, `${username}.png`)
-    const capePath = join(capeDir, `${username}.png`)
-
-    if (skin) {
-      writeFileSync(
-        skinPath,
-        skin.replace(/^data:image\/png;base64,/, ''),
-        'base64',
-      )
-    }
-
-    if (cape) {
-      writeFileSync(
-        capePath,
-        cape.replace(/^data:image\/png;base64,/, ''),
-        'base64',
-      )
-    }
-
-    syncSkinInfoWithClients()
-
-    event.reply(`helpers/account/skin/save`, {
-      skin,
-      cape,
-    })
-  } catch (error) {
-    event.reply(`core/error`, {
-      message: error?.message || error,
-    })
-  }
-}
-
-const resetSkinInfo = async (event: IpcMainEvent) => {
-  try {
-    const store = LauncherStore.getInstance()
-    const { username } = JSON.parse(
-      (store.get('account') as string) || '{}',
-    ) as Account
-    const installationPath = String(store.get('installation-path'))
-    const userDataPath = join(installationPath, 'user-data')
-
-    const skinsDir = join(userDataPath, 'skins')
-    const capeDir = join(userDataPath, 'capes')
-
-    const skinPath = join(skinsDir, `${username}.png`)
-    const capePath = join(capeDir, `${username}.png`)
-
-    const paths = [skinPath, capePath]
-
-    paths.forEach((path) => {
-      if (existsSync(path)) {
-        unlinkSync(path)
-      }
-    })
-
-    event.reply(`helpers/account/skin/reset`, {
-      skin: undefined,
-      cape: undefined,
-    })
-  } catch (error) {
-    event.reply(`core/error`, {
-      error,
-    })
-  }
-}
-
 const getSkinInfo = async (event: IpcMainEvent) => {
   try {
     const store = LauncherStore.getInstance()
     const { username } = JSON.parse(
       (store.get('account') as string) || '{}',
     ) as Account
-    const installationPath = String(store.get('installation-path'))
-    const userDataPath = join(installationPath, 'user-data')
+    const config = getConfig()
 
-    const skinsDir = join(userDataPath, 'skins')
-    const capeDir = join(userDataPath, 'capes')
-
-    const skinPath = join(skinsDir, `${username}.png`)
-    const capePath = join(capeDir, `${username}.png`)
-
-    const skin = existsSync(skinPath) ? skinPath : undefined
-    const cape = existsSync(capePath) ? capePath : undefined
+    const skin = `${config.SKINS_SERVER}/skins/${username}.png`
+    const cape = `${config.SKINS_SERVER}/skins/${username}_cape.png`
 
     event.reply(`helpers/account/skin`, {
       skin,
@@ -330,10 +195,7 @@ export {
   getDiskSpaceByPath,
   storeImage,
   openClientFolder,
-  saveSkinInfo,
   getSkinInfo,
-  resetSkinInfo,
   getRAMRangeArray,
   clearCache,
-  syncSkinInfoWithClients,
 }

@@ -5,7 +5,6 @@ import LauncherStore from './utils/store'
 import createRendererWindow from './windows/renderer'
 import initPaths from './utils/initPaths'
 import getConfig from '../utils/getConfig'
-import { syncSkinInfoWithClients } from './handlers/helpers'
 
 const config = getConfig()
 const store = LauncherStore.getInstance()
@@ -72,7 +71,6 @@ app.on('window-all-closed', () => {
 
 app.whenReady().then(async () => {
   initPaths()
-  syncSkinInfoWithClients()
   const win = await createRendererWindow()
   HelpersEvents(win)
   ipcMain.on('app', (_event, data) => {

@@ -6,9 +6,7 @@ import {
   getDiskSpaceByPath,
   storeImage,
   openClientFolder,
-  saveSkinInfo,
   getSkinInfo,
-  resetSkinInfo,
   getRAMRangeArray,
   clearCache,
 } from '../handlers/helpers'
@@ -31,10 +29,6 @@ const HelpersEvents = (window: BrowserWindow) => {
   })
 
   ipcMain.on('helpers/open-client-folder', openClientFolder)
-
-  ipcMain.on('helpers/account/skin/save', saveSkinInfo)
-
-  ipcMain.on('helpers/account/skin/reset', resetSkinInfo)
 
   ipcMain.on('helpers/account/skin', getSkinInfo)
 
