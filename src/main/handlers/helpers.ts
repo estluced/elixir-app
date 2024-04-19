@@ -73,18 +73,27 @@ const selectFolderHandler = async (
   event: IpcMainEvent,
   window: BrowserWindow,
 ) => {
-  const result = await dialog.showOpenDialog(window, {
-    properties: ['openDirectory'],
-  })
-  if (!result.canceled) {
-    const diskSpace = await checkDiskSpace(result.filePaths[0])
-    const candidatePath = result.filePaths[0]
-    const installPath = candidatePath.includes(LAUNCHER_DIRNAME)
-      ? candidatePath
-      : join(result.filePaths[0], LAUNCHER_DIRNAME)
-    event.reply('helpers/select-folder', {
-      ...diskSpace,
-      path: installPath,
+  try {
+    const result = await dialog.showOpenDialog(window, {
+      properties: ['openDirectory'],
+    })
+    event.reply('core/info', {
+      message: `CANCELED STATUS ${result.canceled}`,
+    })
+    if (!result.canceled) {
+      const diskSpace = await checkDiskSpace(result.filePaths[0])
+      const candidatePath = result.filePaths[0]
+      const installPath = candidatePath.includes(LAUNCHER_DIRNAME)
+        ? candidatePath
+        : join(result.filePaths[0], LAUNCHER_DIRNAME)
+      event.reply('helpers/select-folder', {
+        ...diskSpace,
+        path: installPath,
+      })
+    }
+  } catch (error) {
+    event.reply('core/error', {
+      message: error?.message || error,
     })
   }
 }
