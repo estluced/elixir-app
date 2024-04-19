@@ -71,6 +71,7 @@ const launchHandler = async (event: IpcMainEvent, client: Client) => {
 
         const clientProcess = spawn(command, args, {
           detached: true,
+          cwd: gamePath,
         })
 
         clientProcess.unref()
