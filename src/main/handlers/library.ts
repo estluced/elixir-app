@@ -1,5 +1,5 @@
 import { IpcMainEvent } from 'electron'
-import fs from 'fs'
+import fs, { existsSync, rmSync } from 'fs'
 import path from 'path'
 import isEqual from 'lodash/isEqual'
 import strapiRequest from '../../api/request'
@@ -60,6 +60,21 @@ export const checkClientsStatuses = async (
   event.reply('core/library/get-clients-statuses', clientsWithStatuses)
 }
 
+export const checkClientStatus = async (
+  event: IpcMainEvent,
+  client: StrapiAttributes<Client>,
+) => {
+  const status = await getClientStatus(client.attributes)
+  event.reply('core/library/get-client-status', {
+    id: client.id,
+    status,
+  })
+  event.reply('core/library/set-client-status', {
+    id: client.id,
+    status,
+  })
+}
+
 export const getClients = (event: IpcMainEvent) => {
   const store = LauncherStore.getInstance()
   const installationPath = String(store.get('installation-path'))
@@ -103,4 +118,34 @@ export const getClients = (event: IpcMainEvent) => {
     .catch(() => {
       event.reply('core/library/get-clients', getLocalClients())
     })
+}
+
+export const uninstallClient = async (
+  event: IpcMainEvent,
+  client: StrapiAttributes<Client>,
+) => {
+  event.reply('core/library/set-client-status', {
+    id: client.id,
+    status: ClientStatusEnum.LAUNCHED,
+  })
+  const store = LauncherStore.getInstance()
+  const installationPath = store.get('installation-path')
+  const clientPath = path.join(String(installationPath), client.attributes.uuid)
+  try {
+    if (existsSync(clientPath)) {
+      rmSync(clientPath, {
+        recursive: true,
+        force: true,
+      })
+    }
+    event.reply('core/library/set-client-status', {
+      id: client.id,
+      status: ClientStatusEnum.NOT_INSTALLED,
+    })
+  } catch (e) {
+    event.reply('core/library/set-client-status', {
+      id: client.id,
+      status: ClientStatusEnum.ERROR,
+    })
+  }
 }

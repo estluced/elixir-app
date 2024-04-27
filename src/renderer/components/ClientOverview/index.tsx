@@ -1,8 +1,9 @@
 import { Box, Chip, Grid, Typography } from '@mui/material'
-import { PlayCircle, FolderOpen } from '@mui/icons-material'
+import { Delete, Folder, PlayCircle, RotateLeft } from '@mui/icons-material'
 import marked from 'marked'
 import { useEffect } from 'react'
 import { connect, useDispatch } from 'react-redux'
+import { toast } from 'react-toastify'
 import { Client, ClientStatus, ClientStatusEnum } from '../../../types/client'
 import { ClientOverviewContainer, PlayButton } from './styles'
 import { Carousel } from '../Carousel'
@@ -12,6 +13,8 @@ import { useDownloadCenter } from '../../providers/DownloadCenter'
 import DownloadCard from '../DownloadCard'
 import { RootState } from '../../store'
 import { setClientStatus } from '../../store/clients/clientsSlice'
+import ServersInfo from '../ServersInfo'
+import ClientMenu from './ClientMenu'
 
 const ClientOverview = ({
   client,
@@ -63,14 +66,22 @@ const ClientOverview = ({
         }),
       )
     })
+
+    bridge.on(
+      'core/library/set-client-status',
+      (e: { status: ClientStatus }) => {
+        dispatch(
+          setClientStatus({
+            id: clientId,
+            status: e.status,
+          }),
+        )
+      },
+    )
   }
 
   useEffect(() => {
     initBridgeEvents()
-
-    return () => {
-      // setClientStatus(ClientStatusEnum.INSTALLED)
-    }
   }, [uuid])
 
   const handleAddDownload = () => addDownload(client)
@@ -81,6 +92,44 @@ const ClientOverview = ({
   const handleOpenClientFolder = () => {
     bridge.sendMessage('helpers/open-client-folder', client)
   }
+
+  const clientMenuItems = [
+    {
+      icon: Folder,
+      label: 'Open client folder',
+      onClick: handleOpenClientFolder,
+    },
+    {
+      icon: RotateLeft,
+      label: 'Check for updates',
+      onClick: () => {
+        bridge
+          .sendMessage('core/library/get-client-status', {
+            id: clientId,
+            attributes: client,
+          })
+          .on((clientStatus: { status: ClientStatus }) => {
+            if (clientStatus.status === client.status) {
+              toast('Client is up to date', {
+                type: 'info',
+              })
+            }
+          })
+      },
+      disabled: clientStatus === ClientStatusEnum.LAUNCHED,
+    },
+    {
+      icon: Delete,
+      label: 'Uninstall',
+      onClick: () => {
+        bridge.sendMessage('core/library/uninstall', {
+          id: clientId,
+          attributes: client,
+        })
+      },
+      disabled: clientStatus === ClientStatusEnum.LAUNCHED,
+    },
+  ]
 
   return (
     <ClientOverviewContainer>
@@ -151,25 +200,14 @@ const ClientOverview = ({
             {clientStatus === ClientStatusEnum.DOWNLOADING && (
               <DownloadCard uuid={uuid} />
             )}
-            {clientStatus === ClientStatusEnum.INSTALLED && (
-              <PlayButton
-                onClick={handleOpenClientFolder}
-                sx={{
-                  padding: '5px 8px',
-                  minWidth: 'auto',
-                }}
-              >
-                <FolderOpen
-                  sx={{
-                    width: '22px',
-                    height: '22px',
-                  }}
-                />
-              </PlayButton>
+            {(clientStatus === ClientStatusEnum.INSTALLED ||
+              clientStatus === ClientStatusEnum.LAUNCHED) && (
+              <ClientMenu menuItems={clientMenuItems} />
             )}
           </Grid>
         )}
       </Grid>
+      {client?.servers?.length && <ServersInfo servers={client.servers} />}
       <Carousel
         slidesPerView={1}
         spaceBetween={45}

@@ -77,7 +77,7 @@ const RAMSettings = () => {
           width: '100%',
         }}
         onClick={onSave}
-        disabled={value[0] === minRamFromStore && value[1] === maxRamFromStore}
+        disabled={value === maxRamFromStore}
       >
         Save
       </Button>

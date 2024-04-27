@@ -29,7 +29,17 @@ const getDefaultInstallationPath = async (
   path: string | undefined,
 ) => {
   const installPath = path || DEFAULT_PATH
-  const diskSpace = await checkDiskSpace(installPath)
+  let diskSpace: DiskSpaceInfo
+  try {
+    diskSpace = await checkDiskSpace(installPath)
+  } catch (error) {
+    diskSpace = {
+      diskPath: '',
+      free: 0,
+      size: 0,
+      error: true,
+    }
+  }
   event.reply('helpers/get-installation-path', {
     ...diskSpace,
     path: installPath,
@@ -41,7 +51,14 @@ const getDiskSpaceByPath = async (event: IpcMainEvent, path: string) => {
     .then((diskSpace) => {
       event.reply('helpers/get-disk-space-by-path', diskSpace)
     })
-    .catch(console.log)
+    .catch(() => {
+      event.reply('helpers/get-disk-space-by-path', {
+        diskPath: '',
+        free: 0,
+        size: 0,
+        error: true,
+      })
+    })
 }
 
 const getInstallationPath = () => {

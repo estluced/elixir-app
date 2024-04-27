@@ -26,7 +26,7 @@ const ClientListCard = ({
             variant="outlined"
             label={minecraftVersion.data.attributes.version}
           />
-          {keywords.data.slice(0, 1).map((keyword) => (
+          {keywords.data.slice(0, 2).map((keyword) => (
             <Chip
               key={`keyword-${keyword.id}`}
               variant="outlined"

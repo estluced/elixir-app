@@ -57,13 +57,15 @@ const AuthPage = () => {
   }
 
   return (
-    <AuthContainer container alignContent="center" justifyContent="center">
+    <AuthContainer justifyContent="space-between" container>
+      <Grid />
       <Grid
         container
-        component={Paper}
         direction="column"
         wrap="nowrap"
         sx={{
+          borderLeft: '1px solid #e0e0e0',
+          height: '100%',
           maxWidth: '400px',
           padding: '50px 40px',
         }}

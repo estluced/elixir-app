@@ -23,7 +23,7 @@ ipcMain.on('check-for-updates', async (event, { shouldInform = true }) => {
   })
 
   try {
-    autoUpdater.checkForUpdates()
+    if (app.isPackaged) autoUpdater.checkForUpdates()
   } catch (err) {
     event.reply('core/error', {
       message: `Error in auto-updater. ${err}`,

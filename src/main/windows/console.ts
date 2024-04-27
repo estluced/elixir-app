@@ -5,6 +5,15 @@ declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
 declare const CONSOLE_WINDOW_WEBPACK_ENTRY: string
 
 const createConsoleWindow = async () => {
+  const allWindows = BrowserWindow.getAllWindows()
+
+  const activeConsoleWindow = allWindows.find((w) => w.getTitle() === 'Console')
+
+  if (activeConsoleWindow) {
+    activeConsoleWindow.focus()
+    return activeConsoleWindow
+  }
+
   const consoleWindow = new BrowserWindow({
     width: 900,
     height: 600,

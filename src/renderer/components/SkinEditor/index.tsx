@@ -153,6 +153,7 @@ const SkinEditor = ({ width = 200 }: SkinEditorProps) => {
     <Grid maxWidth={`${width}px`}>
       <Paper
         sx={{
+          height: '310px',
           width: `${width}px`,
           position: 'relative',
         }}
@@ -161,10 +162,9 @@ const SkinEditor = ({ width = 200 }: SkinEditorProps) => {
           skinUrl={skinUrl}
           capeUrl={capeUrl}
           width={width}
-          height={310}
+          height={315}
           options={{
             zoom: 0.8,
-            enableControls: false,
           }}
           onReady={({ viewer }) => {
             viewer.animation = new WalkingAnimation()

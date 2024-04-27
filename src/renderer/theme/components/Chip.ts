@@ -18,6 +18,10 @@ export default function Chip(theme: Theme): Components['MuiChip'] {
         span: {
           padding: 0,
         },
+        '&.MuiChip-colorSuccess': {
+          color: `${theme.palette.success.main} !important`,
+          borderColor: `${theme.palette.success.main} !important`,
+        },
       },
     },
   }

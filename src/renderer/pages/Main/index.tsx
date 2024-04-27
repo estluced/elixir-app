@@ -1,5 +1,4 @@
 import { connect } from 'react-redux'
-import { useEffect } from 'react'
 import {
   ClientBackgroundContainer,
   ClientOverviewContainer,
@@ -9,10 +8,8 @@ import { RootState } from '../../store'
 import ClientsNavigation from '../../components/ClientsNavigation'
 import ClientOverview from '../../components/ClientOverview'
 import StrapiMedia from '../../components/StrapiMedia'
-import { setActiveClient, setClients } from '../../store/clients/clientsSlice'
-import { StrapiAttributes, StrapiDataMultiple } from '../../../types/strapi'
+import { setActiveClient } from '../../store/clients/clientsSlice'
 import { Client } from '../../../types/client'
-import usePreload from '../../hooks/usePreload'
 
 interface MainPageProps {
   activeClient: Client

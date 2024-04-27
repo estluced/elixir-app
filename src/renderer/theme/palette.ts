@@ -13,6 +13,9 @@ export default {
   common: {
     black: '#111111',
   },
+  success: {
+    main: '#41fb3a',
+  },
   divider: '#ffffff',
   text: {
     secondary: '#000000',

@@ -76,41 +76,39 @@ const launchHandler = async (event: IpcMainEvent, client: Client) => {
 
         if (shell) {
           createConsoleWindow().then((win) => {
-            win.on('ready-to-show', () => {
-              if (!clientProcess.killed) {
-                clientProcess.stdout?.setEncoding('utf-8')
+            if (!clientProcess.killed) {
+              clientProcess.stdout?.setEncoding('utf-8')
 
+              win?.webContents.send(
+                'core/console/stdout',
+                getLogStrokeWithStatus(
+                  `Launched with command: ${command} ${args.join(' ')}`,
+                ),
+              )
+
+              clientProcess.stdout?.on('data', (data) => {
                 win?.webContents.send(
                   'core/console/stdout',
-                  getLogStrokeWithStatus(
-                    `Launched with command: ${command} ${args.join(' ')}`,
-                  ),
+                  getLogStrokeWithStatus(data),
                 )
+              })
 
-                clientProcess.stdout?.on('data', (data) => {
-                  win?.webContents.send(
-                    'core/console/stdout',
-                    getLogStrokeWithStatus(data),
-                  )
+              clientProcess.stderr?.setEncoding('utf-8')
+
+              clientProcess.stderr?.on('data', (data) => {
+                win?.webContents.send(
+                  'core/console/stderr',
+                  getLogStrokeWithStatus(data),
+                )
+              })
+
+              clientProcess.on('error', (error) => {
+                win?.webContents.send('core/console/stderr', {
+                  stroke: error.message,
+                  status: 'error',
                 })
-
-                clientProcess.stderr?.setEncoding('utf-8')
-
-                clientProcess.stderr?.on('data', (data) => {
-                  win?.webContents.send(
-                    'core/console/stderr',
-                    getLogStrokeWithStatus(data),
-                  )
-                })
-
-                clientProcess.on('error', (error) => {
-                  win?.webContents.send('core/console/stderr', {
-                    stroke: error.message,
-                    status: 'error',
-                  })
-                })
-              }
-            })
+              })
+            }
 
             win.on('closed', () => {
               // eslint-disable-next-line no-param-reassign

@@ -2,7 +2,6 @@ import {
   StrapiAttributes,
   StrapiDataMultiple,
   StrapiDataSingle,
-  StrapiFile,
   StrapiMedia,
 } from './strapi'
 import { MinecraftClient, MinecraftVersion } from './minecraft'
@@ -39,4 +38,5 @@ export interface Client {
   metadataUrl: string
   versionHashUrl: string
   status: ClientStatus
+  servers?: string[]
 }
