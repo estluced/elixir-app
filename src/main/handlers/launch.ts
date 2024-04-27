@@ -47,7 +47,7 @@ const launchHandler = async (event: IpcMainEvent, client: Client) => {
 
     const installationPath = String(store.get('installation-path'))
     const gamePath = join(installationPath, uuid)
-    const javaPath = join(installationPath, uuid, 'runtime', 'bin', 'javaw.exe')
+    const javaPath = join(installationPath, uuid, 'runtime', 'bin', 'java.exe')
 
     await launch({
       gamePath,
