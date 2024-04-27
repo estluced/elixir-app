@@ -11,8 +11,11 @@ const LauncherSettings = () => {
 
   const handleLogout = () => {
     dispatch(toggleSettingsModal())
-    localStore.set('account', null)
-    localStore.set('_jwt', null)
+    localStore.remove('userName')
+    localStore.remove('userEmail')
+    localStore.remove('userId')
+    localStore.remove('userBlocked')
+    localStore.remove('_jwt')
     window.location.reload()
   }
 

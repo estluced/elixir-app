@@ -2,6 +2,7 @@ import { HashRouter, Routes, Route } from 'react-router-dom'
 import { Container } from '@mui/material'
 import { useEffect } from 'react'
 import { connect } from 'react-redux'
+import { toast } from 'react-toastify'
 import Main from './Main'
 import Auth from './Auth'
 import usePreload from '../hooks/usePreload'
@@ -29,6 +30,9 @@ const Pages = ({ activeClient, setActiveClient, setClients }: PagesProps) => {
     bridge
       .sendMessage('core/library/get-clients')
       .on((clientsResponse: StrapiDataMultiple<StrapiAttributes<Client>>) => {
+        toast(`Clients loaded ${clientsResponse.data[0].attributes.title}`, {
+          type: 'success',
+        })
         bridge
           .sendMessage('core/library/get-clients-statuses', clientsResponse)
           .on((clientsWithStatuses: StrapiAttributes<Client>[]) => {

@@ -9,6 +9,7 @@ const DEFAULT_INSTALLATION_FOLDER = {
   path: '',
   free: 0,
   size: 0,
+  error: false,
 }
 
 interface SelectFolderProps {
@@ -31,14 +32,16 @@ const SelectFolder = ({
     path: string
     free: number
     size: number
+    error?: boolean
   }>(DEFAULT_INSTALLATION_FOLDER)
 
   const neededSpace = 5e9
 
   const finishDisabled =
-    !installationFolder?.path?.length ||
-    installationFolder?.free < neededSpace ||
-    installPath === installationFolder.path
+    installationFolder?.error ??
+    (!installationFolder?.path?.length ||
+      installationFolder?.free < neededSpace ||
+      installPath === installationFolder.path)
 
   useEffect(() => {
     bridge
@@ -70,11 +73,13 @@ const SelectFolder = ({
         {title || 'Select clients installation folder'}
       </Typography>
       <Box display="grid" gap="6px">
-        <Typography sx={{ marginLeft: '8px' }} fontSize="12px">
-          {bytesToSize(installationFolder.free || 0)} free of{' '}
-          {bytesToSize(installationFolder.size || 0)} Needed:{' '}
-          {bytesToSize(neededSpace)}
-        </Typography>
+        {!installationFolder?.error && (
+          <Typography sx={{ marginLeft: '8px' }} fontSize="12px">
+            {bytesToSize(installationFolder.free || 0)} free of{' '}
+            {bytesToSize(installationFolder.size || 0)} Needed:{' '}
+            {bytesToSize(neededSpace)}
+          </Typography>
+        )}
         <Tooltip title={installationFolder.path} sx={{ cursor: 'pointer' }}>
           <PickInstallationFolderField onClick={handleOpenFolderPicker}>
             <Typography variant="body2">{installationFolder.path}</Typography>

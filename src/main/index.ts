@@ -3,8 +3,8 @@ import CoreEvents from './events/core'
 import HelpersEvents from './events/helpers'
 import LauncherStore from './utils/store'
 import createRendererWindow from './windows/renderer'
-import initPaths from './utils/initPaths'
 import getConfig from '../utils/getConfig'
+import initAppData from './utils/initAppData'
 
 const config = getConfig()
 const store = LauncherStore.getInstance()
@@ -55,6 +55,9 @@ ipcMain.on('check-for-updates', async (event, { shouldInform = true }) => {
 ipcMain.on('electron-store-get', async (event, val) => {
   event.returnValue = store.get(val)
 })
+
+ipcMain.on('electron-store-remove', async (_event, key) => store.delete(key))
+
 ipcMain.on('electron-store-set', async (_event, key, val) => {
   store.set(key, val)
 })
@@ -70,7 +73,7 @@ app.on('window-all-closed', () => {
 })
 
 app.whenReady().then(async () => {
-  initPaths()
+  initAppData()
   const win = await createRendererWindow()
   HelpersEvents(win)
   ipcMain.on('app', (_event, data) => {

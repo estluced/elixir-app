@@ -1,12 +1,11 @@
 import { Grid, Paper, TextField, Typography } from '@mui/material'
 import Button from '@mui/material/Button'
-import SkinEditor from '../../../../components/SkinEditor'
 import usePreload from '../../../../hooks/usePreload'
-import { Account } from '../../../../../types/account'
 
 const AccountSettings = () => {
   const { localStore } = usePreload()
-  const account: Account = JSON.parse(localStore.get('account') || '{}')
+  const userName = localStore.get('userName')
+  const userEmail = localStore.get('userEmail')
 
   return (
     <Paper
@@ -19,8 +18,8 @@ const AccountSettings = () => {
       <Typography textAlign="center" p="0 20px" variant="h5" fontWeight={600}>
         Account
       </Typography>
-      <TextField value={account?.username} label="Username" disabled />
-      <TextField value={account?.email} label="Email" disabled />
+      <TextField value={userName} label="Username" disabled />
+      <TextField value={userEmail} label="Email" disabled />
       <TextField value="12345678" label="Password" type="password" disabled />
       <Button variant="contained" disabled>
         Save

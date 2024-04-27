@@ -1,11 +1,11 @@
-import Store from 'electron-store'
+import UserDataStore from './userDataStore'
 
 export class LauncherStore {
-  private static instance: Store
+  private static instance: UserDataStore
 
-  public static getInstance(): Store {
+  public static getInstance(): UserDataStore {
     if (!LauncherStore.instance) {
-      LauncherStore.instance = new Store()
+      LauncherStore.instance = new UserDataStore()
     }
 
     return LauncherStore.instance

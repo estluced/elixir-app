@@ -41,6 +41,9 @@ const electronHandler = {
     clear() {
       ipcRenderer.send('electron-store-clear')
     },
+    remove(key: string) {
+      ipcRenderer.send('electron-store-remove', key)
+    },
   },
 }
 

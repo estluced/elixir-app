@@ -8,7 +8,8 @@ import { toggleSettingsModal } from '../../../../store/app/modalsSlice'
 
 const RAMSettings = () => {
   const { bridge, localStore } = usePreload()
-  const settings = JSON.parse(localStore.get('settings') || '{}')
+  const minRamFromStore = localStore.get('minRam')
+  const maxRamFromStore = localStore.get('maxRam')
   const [value, setValue] = useState<number[]>([])
   const [ramRangeArray, setRamRangeArray] = useState<number[]>([])
   const [sliderMarks, setSliderMarks] = useState<
@@ -23,10 +24,7 @@ const RAMSettings = () => {
       .sendMessage('helpers/get-ram-range-array')
       .on((ramRangeArray: number[]) => {
         setRamRangeArray(ramRangeArray)
-        setValue([
-          settings.minRam || ramRangeArray[0],
-          settings.maxRam || ramRangeArray[1],
-        ])
+        setValue(maxRamFromStore || ramRangeArray[1])
         setSliderMarks(ramRangeArray.map((ram) => ({ value: ram })))
       })
   }, [])
@@ -36,10 +34,8 @@ const RAMSettings = () => {
   }
 
   const onSave = () => {
-    localStore.set(
-      'settings',
-      JSON.stringify({ ...settings, minRam: value[0], maxRam: value[1] }),
-    )
+    localStore.set('minRam', minRamFromStore)
+    localStore.set('maxRam', value)
     toast('Settings changes saved', {
       type: 'success',
     })
@@ -81,7 +77,7 @@ const RAMSettings = () => {
           width: '100%',
         }}
         onClick={onSave}
-        disabled={value[0] === settings.minRam && value[1] === settings.maxRam}
+        disabled={value[0] === minRamFromStore && value[1] === maxRamFromStore}
       >
         Save
       </Button>

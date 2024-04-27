@@ -1,25 +1,28 @@
-import { IpcMainEvent, dialog, BrowserWindow, ipcMain, shell } from 'electron'
-import { homedir, totalmem } from 'os'
-import checkDiskSpace from 'check-disk-space'
-import { request } from 'undici'
 import {
-  existsSync,
-  mkdirSync,
-  writeFileSync,
-  rmdirSync,
-  readdirSync,
-  symlinkSync,
-} from 'fs'
+  IpcMainEvent,
+  dialog,
+  BrowserWindow,
+  ipcMain,
+  shell,
+  app,
+} from 'electron'
+import checkDiskSpace, { DiskSpace } from 'check-disk-space'
+import { request } from 'undici'
+import { existsSync, mkdirSync, writeFileSync, rmdirSync } from 'fs'
 import { join } from 'path'
 import LauncherStore from '../utils/store'
 import { StrapiMedia } from '../../types/strapi'
 import getConfig from '../../utils/getConfig'
 import { Client } from '../../types/client'
-import { Account } from '../../types/account'
-import initPaths from '../utils/initPaths'
+import initAppData from '../utils/initAppData'
+import { getRAMRange } from '../utils/system'
+
+interface DiskSpaceInfo extends DiskSpace {
+  error?: boolean
+}
 
 const LAUNCHER_DIRNAME = 'Elixir'
-const DEFAULT_PATH = join(homedir(), LAUNCHER_DIRNAME)
+const DEFAULT_PATH = app.getPath('userData')
 
 const getDefaultInstallationPath = async (
   event: IpcMainEvent,
@@ -62,7 +65,7 @@ const setInstallationPath = (
   try {
     const store = LauncherStore.getInstance()
     store.set('installation-path', installationPathInfo.path)
-    initPaths(installationPathInfo.path)
+    initAppData(installationPathInfo.path)
     event.reply('helpers/set-installation-path', true)
   } catch (error) {
     event.reply('helpers/set-installation-path', false)
@@ -77,11 +80,18 @@ const selectFolderHandler = async (
     const result = await dialog.showOpenDialog(window, {
       properties: ['openDirectory'],
     })
-    event.reply('core/info', {
-      message: `CANCELED STATUS ${result.canceled}`,
-    })
     if (!result.canceled) {
-      const diskSpace = await checkDiskSpace(result.filePaths[0])
+      let diskSpace: DiskSpaceInfo
+      try {
+        diskSpace = await checkDiskSpace(result.filePaths[0])
+      } catch (error) {
+        diskSpace = {
+          diskPath: '',
+          free: 0,
+          size: 0,
+          error: true,
+        }
+      }
       const candidatePath = result.filePaths[0]
       const installPath = candidatePath.includes(LAUNCHER_DIRNAME)
         ? candidatePath
@@ -143,13 +153,11 @@ const storeImage = async (_: IpcMainEvent, image: StrapiMedia) => {
 const getSkinInfo = async (event: IpcMainEvent) => {
   try {
     const store = LauncherStore.getInstance()
-    const { username } = JSON.parse(
-      (store.get('account') as string) || '{}',
-    ) as Account
+    const userName = store.get('userName')
     const config = getConfig()
 
-    const skin = `${config.SKINS_SERVER}/skins/${username}.png`
-    const cape = `${config.SKINS_SERVER}/skins/${username}_cape.png`
+    const skin = `${config.SKINS_SERVER}/skins/${userName}.png`
+    const cape = `${config.SKINS_SERVER}/skins/${userName}_cape.png`
 
     event.reply(`helpers/account/skin`, {
       skin,
@@ -163,19 +171,7 @@ const getSkinInfo = async (event: IpcMainEvent) => {
 }
 
 const getRAMRangeArray = (event: IpcMainEvent) => {
-  const totalMemoryMB = Math.floor(totalmem() / 1024 / 1024)
-
-  const start = 2024
-  const end = totalMemoryMB % 2 === 0 ? totalMemoryMB : totalMemoryMB - 1
-  const step = 2000
-
-  const rangeArray = []
-
-  for (let i = start; i <= end; i += step) {
-    if (i % 2 === 0) {
-      rangeArray.push(i)
-    }
-  }
+  const rangeArray = getRAMRange()
 
   event.reply('helpers/get-ram-range-array', rangeArray)
 }

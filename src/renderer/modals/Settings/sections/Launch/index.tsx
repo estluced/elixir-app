@@ -1,4 +1,4 @@
-import { Grid, Paper, Typography, Switch, Divider } from '@mui/material'
+import { Grid, Paper, Typography, Switch } from '@mui/material'
 import { useEffect, useState } from 'react'
 import usePreload from '../../../../hooks/usePreload'
 import { Settings } from '../../../../../types/settings'
@@ -39,29 +39,26 @@ const GameSettings = () => {
   })
 
   useEffect(() => {
-    const settingsFromStore = localStore.get('settings')
-    if (settingsFromStore) {
-      setGameSettings(JSON.parse(settingsFromStore))
-    }
+    const shellFromStore = localStore.get('shell')
+    const fullscreenFromStore = localStore.get('fullscreen')
+    const minRamFromStore = localStore.get('minRam')
+    const maxRamFromStore = localStore.get('maxRam')
+    setGameSettings({
+      shell: shellFromStore || false,
+      fullscreen: fullscreenFromStore || undefined,
+      minRam: minRamFromStore || 0,
+      maxRam: maxRamFromStore || 0,
+    })
   }, [])
 
   const onChangeShell = () => {
-    localStore.set(
-      'settings',
-      JSON.stringify({ ...gameSettings, shell: !gameSettings.shell }),
-    )
+    localStore.set('shell', !gameSettings.shell)
     setGameSettings({ ...gameSettings, shell: !gameSettings.shell })
   }
 
   const onChangeFullscreen = () => {
     const fullscreen = !gameSettings.fullscreen || undefined
-    localStore.set(
-      'settings',
-      JSON.stringify({
-        ...gameSettings,
-        fullscreen,
-      }),
-    )
+    localStore.set('fullscreen', fullscreen)
     setGameSettings({ ...gameSettings, fullscreen })
   }
 

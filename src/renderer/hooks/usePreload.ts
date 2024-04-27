@@ -5,7 +5,12 @@ const usePreload = () => {
   const installPath = localStore.get('installation-path')
   const lang = localStore.get('language')
   const accountJwt = localStore.get('_jwt')
-  const account: Account = JSON.parse(localStore.get('account') || '{}')
+  const account: Account = {
+    id: localStore.get('userId'),
+    username: localStore.get('userName'),
+    email: localStore.get('userEmail'),
+    blocked: localStore.get('userBlocked'),
+  }
   const cachePath = `${installPath}/.cache`
 
   const setupIsComplete = installPath?.length && lang?.length

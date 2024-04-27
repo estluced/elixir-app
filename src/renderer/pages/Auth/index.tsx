@@ -41,8 +41,13 @@ const AuthPage = () => {
           setError('Something went wrong, please try again')
           return
         }
+        const { user } = res
         localStore.set('_jwt', res.jwt)
-        localStore.set('account', JSON.stringify(res.user))
+        localStore.set('userName', user.username)
+        localStore.set('userEmail', user.email)
+        localStore.set('userId', user.id)
+        localStore.set('userBlocked', user.blocked)
+
         window.location.reload()
       })
       .finally(() => {

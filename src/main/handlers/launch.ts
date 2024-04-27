@@ -4,9 +4,7 @@ import { join } from 'path'
 import { spawn } from 'child_process'
 import { Client, ClientStatusEnum } from '../../types/client'
 import LauncherStore from '../utils/store'
-import { Account } from '../../types/account'
 import createConsoleWindow from '../windows/console'
-import { Settings } from '../../types/settings'
 
 const getLogStrokeWithStatus = (stroke: string) => {
   if (stroke.includes('/INFO]')) {
@@ -40,12 +38,12 @@ const launchHandler = async (event: IpcMainEvent, client: Client) => {
       minecraftVersion.data.attributes?.forge ||
       minecraftVersion.data.attributes.version
     const store = LauncherStore.getInstance()
-    const account = JSON.parse(
-      (store.get('account') as string) || '{}',
-    ) as Account
-    const settings = JSON.parse(
-      (store.get('settings') as string) || '{}',
-    ) as Settings
+    const userId = store.get('userId') as string
+    const userName = store.get('userName') as string
+    const fullscreen = store.get('fullscreen') as true | undefined
+    const maxRam = store.get('maxRam') as number
+    const minRam = store.get('minRam') as number
+    const shell = store.get('shell') as boolean
 
     const installationPath = String(store.get('installation-path'))
     const gamePath = join(installationPath, uuid)
@@ -56,14 +54,14 @@ const launchHandler = async (event: IpcMainEvent, client: Client) => {
       javaPath,
       version,
       gameProfile: {
-        id: account.id,
-        name: account.username,
+        id: userId,
+        name: userName,
       },
       resolution: {
-        fullscreen: settings.fullscreen,
+        fullscreen,
       },
-      maxMemory: settings.maxRam || undefined,
-      minMemory: settings.minRam || undefined,
+      maxMemory: maxRam || undefined,
+      minMemory: minRam || undefined,
       spawn: (command, args) => {
         event.reply(`core/launch/client/${uuid}`, {
           status: ClientStatusEnum.LAUNCHED,
@@ -76,7 +74,7 @@ const launchHandler = async (event: IpcMainEvent, client: Client) => {
 
         clientProcess.unref()
 
-        if (settings.shell) {
+        if (shell) {
           createConsoleWindow().then((win) => {
             win.on('ready-to-show', () => {
               if (!clientProcess.killed) {
