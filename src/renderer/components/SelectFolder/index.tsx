@@ -38,10 +38,11 @@ const SelectFolder = ({
   const neededSpace = 5e9
 
   const finishDisabled =
-    installationFolder?.error ??
-    (!installationFolder?.path?.length ||
-      installationFolder?.free < neededSpace ||
-      installPath === installationFolder.path)
+    !installationFolder?.path?.length ||
+    (installationFolder?.error
+      ? false
+      : installationFolder?.free < neededSpace) ||
+    installPath === installationFolder.path
 
   useEffect(() => {
     bridge
