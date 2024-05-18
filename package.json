@@ -1,7 +1,7 @@
 {
   "name": "elixir-app",
   "productName": "Elixir Launcher",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "description": "Elixir Launcher",
   "main": ".webpack/main",
   "scripts": {
