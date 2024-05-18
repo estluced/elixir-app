@@ -32,6 +32,7 @@ const ClientOverview = ({
     available,
     uuid,
     status: clientStatus = ClientStatusEnum.INSTALLED,
+    titleImage,
   } = client
 
   const dispatch = useDispatch()
@@ -134,9 +135,20 @@ const ClientOverview = ({
   return (
     <ClientOverviewContainer>
       <Grid container direction="column" gap="10px">
-        <Typography variant="h2" fontWeight={700}>
-          {title}
-        </Typography>
+        {titleImage?.data?.attributes ? (
+          <StrapiMedia
+            {...titleImage?.data}
+            sx={{
+              height: '200px',
+              width: '350px',
+              objectFit: 'contain',
+            }}
+          />
+        ) : (
+          <Typography variant="h2" fontWeight={700}>
+            {title}
+          </Typography>
+        )}
         <Typography
           sx={{
             maxWidth: '400px',

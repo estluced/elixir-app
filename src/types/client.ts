@@ -39,4 +39,5 @@ export interface Client {
   versionHashUrl: string
   status: ClientStatus
   servers?: string[]
+  titleImage?: StrapiDataSingle<StrapiAttributes<StrapiMedia>>
 }

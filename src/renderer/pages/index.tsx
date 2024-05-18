@@ -30,9 +30,6 @@ const Pages = ({ activeClient, setActiveClient, setClients }: PagesProps) => {
     bridge
       .sendMessage('core/library/get-clients')
       .on((clientsResponse: StrapiDataMultiple<StrapiAttributes<Client>>) => {
-        toast(`Clients loaded ${clientsResponse.data[0].attributes.title}`, {
-          type: 'success',
-        })
         bridge
           .sendMessage('core/library/get-clients-statuses', clientsResponse)
           .on((clientsWithStatuses: StrapiAttributes<Client>[]) => {
