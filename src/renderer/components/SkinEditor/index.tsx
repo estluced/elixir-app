@@ -108,7 +108,6 @@ const SkinEditor = ({ width = 200 }: SkinEditorProps) => {
   const onChangeCape = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      console.log(file)
       setCapeUrl(URL.createObjectURL(file))
       setCapeFile(file)
     }
@@ -134,7 +133,6 @@ const SkinEditor = ({ width = 200 }: SkinEditorProps) => {
   }
 
   const onSave = () => {
-    console.log(capeFile)
     uploadSkinData(account.username, {
       skin: skinFile,
       cape: capeFile,

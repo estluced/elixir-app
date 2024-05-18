@@ -13,8 +13,6 @@ export const uploadSkinData = async (
   const promiseArray = []
   const config = getConfig()
 
-  console.log(payload)
-
   if (payload.skin) {
     formData.append('skin', payload.skin)
     promiseArray.push(

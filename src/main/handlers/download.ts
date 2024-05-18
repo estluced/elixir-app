@@ -37,6 +37,7 @@ const downloadHandler = async (event: IpcMainEvent, client: Client) => {
           path,
         }
       })
+      .filter((file) => !(file?.downloadOnce && existsSync(file.path)))
 
     if (existsSync(localMetadataPath)) {
       const localMetadata = JSON.parse(
@@ -49,6 +50,7 @@ const downloadHandler = async (event: IpcMainEvent, client: Client) => {
           ...downloadFile,
           path: join(installPath, downloadFile.path),
         }))
+        .filter((file) => !(file?.downloadOnce && existsSync(file.path)))
 
       const filesPaths = files.map((file) => file.path)
 

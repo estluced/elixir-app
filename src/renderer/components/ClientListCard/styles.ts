@@ -31,7 +31,7 @@ export const ClientListCardContainer = styled(Box, {
 
 export const ClientPosterContainer = styled(Box)(({ theme }) => ({
   height: '60px',
-  width: '50px',
+  width: '60px',
   overflow: 'hidden',
   borderRadius: '4px',
   img: {

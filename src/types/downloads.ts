@@ -5,6 +5,7 @@ export interface FileMetadata {
   url: string
   isDir: boolean
   name: string
+  downloadOnce?: boolean
 }
 
 export interface FilesMetadata {

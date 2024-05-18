@@ -28,18 +28,19 @@
             window.scrollTo(0, document.body.scrollHeight + 100)
             const status = e.status
             const stroke = e.stroke
+            if (!stroke?.length) return
             switch (status) {
                 case 'error':
-                    terminalRoot.innerHTML += `<p style="color: red; white-space: pre-wrap">${stroke}</p>`
+                    terminalRoot.innerHTML += `<p style="color: red; white-space: pre-wrap">${String(stroke)}</p>`
                     break
                 case 'warning':
-                    terminalRoot.innerHTML += `<p style="color: orange; white-space: pre-wrap">${stroke}</p>`
+                    terminalRoot.innerHTML += `<p style="color: orange; white-space: pre-wrap">${String(stroke)}</p>`
                     break
                 case 'info':
-                    terminalRoot.innerHTML += `<p style="color: white; white-space: pre-wrap">${stroke}</p>`
+                    terminalRoot.innerHTML += `<p style="color: white; white-space: pre-wrap">${String(stroke)}</p>`
                     break
                 default:
-                    terminalRoot.innerHTML += `<p style="color: white; white-space: pre-wrap">${stroke}</p>`
+                    terminalRoot.innerHTML += `<p style="color: white; white-space: pre-wrap">${String(stroke)}</p>`
             }
         })
     </script>

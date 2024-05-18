@@ -18,7 +18,6 @@ const initAppData = (installPath: string | null = null) => {
 
     const minRam = Math.min(...firstRamThird)
     const maxRam = Math.max(...firstRamThird)
-    console.log(minRamFromStore, maxRamFromStore, ramRange, minRam, maxRam)
     store.set('minRam', minRam)
     store.set('maxRam', maxRam)
   }
