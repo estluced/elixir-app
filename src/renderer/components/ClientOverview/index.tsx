@@ -139,9 +139,11 @@ const ClientOverview = ({
           <StrapiMedia
             {...titleImage?.data}
             sx={{
-              height: '200px',
+              height: 'max-content',
               width: '350px',
               objectFit: 'contain',
+              marginTop: '10px',
+              marginBottom: '30px',
             }}
           />
         ) : (
