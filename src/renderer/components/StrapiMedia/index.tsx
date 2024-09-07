@@ -10,6 +10,11 @@ interface StrapiMediaComponentProps extends StrapiAttributes<StrapiMedia> {
   alt?: string
 }
 
+const getImageSource = (attributes: StrapiMedia) => {
+  const { formats } = attributes
+  return formats.medium || formats.large
+}
+
 const StrapiMediaComponent = ({
   alt,
   sx,
@@ -18,8 +23,9 @@ const StrapiMediaComponent = ({
   const config = getConfig()
   const [source, setSource] = useState('')
   const { bridge, cachePath } = usePreload()
-  const imageFromCache = `${cachePath}/${attributes.hash}${attributes.ext}`
-  const imageFromUrl = `${config.API_URL_V2}${attributes.url}`
+  const imageSource = getImageSource(attributes)
+  const imageFromCache = `${cachePath}/${imageSource.hash}${imageSource.ext}`
+  const imageFromUrl = `${config.API_URL_V2}${imageSource.url}`
 
   useEffect(() => {
     const imgFromCache = new Image()
@@ -28,10 +34,10 @@ const StrapiMediaComponent = ({
       setSource(imageFromCache)
     }
     imgFromCache.onerror = () => {
-      bridge.sendMessage('helpers/cache-image', attributes)
+      bridge.sendMessage('helpers/cache-image', imageSource)
       setSource(imageFromUrl)
     }
-  }, [attributes])
+  }, [imageSource])
 
   return <StyledImage src={source} alt={alt} sx={sx} />
 }
