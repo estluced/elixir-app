@@ -15,74 +15,76 @@ import { StrapiAttributes, StrapiDataMultiple } from '../../types/strapi'
 import { Client } from '../../types/client'
 import { setActiveClient, setClients } from '../store/clients/clientsSlice'
 import { RootState } from '../store'
+import Library from './Library'
 
 interface PagesProps {
-  activeClient: Client
-  setActiveClient: (clientId: number) => void
-  setClients: (clients: StrapiAttributes<Client>[]) => void
+	activeClient: Client
+	setActiveClient: (clientId: number) => void
+	setClients: (clients: StrapiAttributes<Client>[]) => void
 }
 
 const Pages = ({ activeClient, setActiveClient, setClients }: PagesProps) => {
-  const { bridge } = usePreload()
-  const { accountJwt, setupIsComplete } = usePreload()
+	const { bridge } = usePreload()
+	const { accountJwt, setupIsComplete } = usePreload()
 
-  useEffect(() => {
-    bridge
-      .sendMessage('core/library/get-clients')
-      .on((clientsResponse: StrapiDataMultiple<StrapiAttributes<Client>>) => {
-        bridge
-          .sendMessage('core/library/get-clients-statuses', clientsResponse)
-          .on((clientsWithStatuses: StrapiAttributes<Client>[]) => {
-            setClients(
-              clientsWithStatuses.sort(
-                (a, b) =>
-                  new Date(b?.attributes.createdAt).getTime() -
-                  new Date(a?.attributes.createdAt).getTime(),
-              ),
-            )
-            if (!activeClient) setActiveClient(clientsWithStatuses[0].id)
-          })
-      })
-  }, [])
+	useEffect(() => {
+		bridge
+			.sendMessage('core/library/get-clients')
+			.on((clientsResponse: StrapiDataMultiple<StrapiAttributes<Client>>) => {
+				bridge
+					.sendMessage('core/library/get-clients-statuses', clientsResponse)
+					.on((clientsWithStatuses: StrapiAttributes<Client>[]) => {
+						setClients(
+							clientsWithStatuses.sort(
+								(a, b) =>
+									new Date(b?.attributes.createdAt).getTime() -
+									new Date(a?.attributes.createdAt).getTime(),
+							),
+						)
+						if (!activeClient) setActiveClient(clientsWithStatuses[0].id)
+					})
+			})
+	}, [])
 
-  return (
-    <HashRouter>
-      <Header />
-      <Container>
-        {setupIsComplete ? (
-          <>
-            {!!accountJwt?.length && (
-              <>
-                <Sidebar />
-                <SettingsModal />
-              </>
-            )}
-            <Routes>
-              {accountJwt?.length ? (
-                <>
-                  <Route path="/" element={<Main />} />
-                  <Route path="/minecraft" element={<MinecraftPage />} />
-                </>
-              ) : (
-                <Route path="/" element={<Auth />} />
-              )}
-            </Routes>
-          </>
-        ) : (
-          <SetupPage />
-        )}
-      </Container>
-    </HashRouter>
-  )
+	return (
+		<HashRouter>
+			<Header />
+			<Container>
+				{setupIsComplete ? (
+					<>
+						{!!accountJwt?.length && (
+							<>
+								<Sidebar />
+								<SettingsModal />
+							</>
+						)}
+						<Routes>
+							{accountJwt?.length ? (
+								<>
+									<Route path="/" element={<Main />} />
+									<Route path="/minecraft" element={<MinecraftPage />} />
+									<Route path="/library" element={<Library />} />
+								</>
+							) : (
+								<Route path="/" element={<Auth />} />
+							)}
+						</Routes>
+					</>
+				) : (
+					<SetupPage />
+				)}
+			</Container>
+		</HashRouter>
+	)
 }
 
 export default connect(
-  (state: RootState) => ({
-    activeClient: state.clients.activeClient?.attributes,
-  }),
-  (dispatch) => ({
-    setActiveClient: (clientId: number) => dispatch(setActiveClient(clientId)),
-    setClients: (clients: StrapiAttributes<Client>[]) =>
-      dispatch(setClients(clients)),
-  }),
+	(state: RootState) => ({
+		activeClient: state.clients.activeClient?.attributes,
+	}),
+	(dispatch) => ({
+		setActiveClient: (clientId: number) => dispatch(setActiveClient(clientId)),
+		setClients: (clients: StrapiAttributes<Client>[]) =>
+			dispatch(setClients(clients)),
+	}),
 )(Pages)
